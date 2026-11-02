@@ -4,6 +4,15 @@ All notable changes to Network Diagnostics, version by version.
 This project follows [Semantic Versioning](https://semver.org) and a
 "born beta" workflow: early public versions, honest changelogs.
 
+## [0.6.0] — 2026-11-02 — Essential Light
+
+- **New default look: V1 Essential Light.** The dashboard moves to the
+  warm premium light design chosen from the Stitch design program
+  (per-platform × 3-category screens): warm paper background, white
+  cards, deep-emerald ink, gold crown accents. Same engine, same
+  features — parallel fetch, mirror retry, native exports, favorites,
+  keep-alive — in the light enterprise skin.
+
 ## [0.5.2] — 2026-11-02 — Fetch reliability
 
 - **Parallel source fetching.** The 52 source files were fetched one

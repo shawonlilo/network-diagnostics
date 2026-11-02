@@ -173,7 +173,10 @@ Direction and tokens live in [DESIGN.md](DESIGN.md). Every build is gated in CI 
 The built-in catalog — TheSpeedX, monosans, ProxyScrape, stormsia, HProxy, proxifly, jetkai, databay, iplocate, roosterkid, clarketm, hookzof, proxmint, relayglass, hideip.me, vakhov, mmpx12, Zaeem20 — is documented with refresh rates and license notes in [SOURCES.md](SOURCES.md). Full credits below 👇
 
 
-### 🆕 In v0.5.0 — the enterprise dashboard + power tools
+### 🆕 In v0.6.0
+- 🤍 **Essential Light design** — the warm premium light theme from our Stitch design program is now the app's look on every platform.
+
+## 🆕 In v0.5.0 — the enterprise dashboard + power tools
 - 👑 **New brand & logo** — crown + diagnostics-pulse identity, proper icons on every platform.
 - 📂 **Upload your own list** — file picker or drag & drop (.txt / .csv), plus paste.
 - 📄 **Real exports that save on every platform** — `working.txt`, `all-checked.txt`, `residential.txt`, `datacenter.txt`, **results.csv** (Excel/Sheets), **report.pdf** (print-ready), `report.json`. Files are written natively to your Downloads folder — they work on Android too, where browser-style downloads silently fail.
