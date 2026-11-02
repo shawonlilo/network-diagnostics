@@ -2,7 +2,8 @@
 resolver = "2"
 members = ["core", "cli"]
 default-members = ["core", "cli"]
-# The Tauri app in app/ is built by CI (needs platform WebView dev libraries).
+exclude = ["app/src-tauri"]
+# The Tauri app in app/ is its own workspace (see app/src-tauri/Cargo.toml).
 # It consumes the same nd-core library through a path dependency.
 
 [profile.release]

@@ -4,6 +4,16 @@ All notable changes to Network Diagnostics, version by version.
 This project follows [Semantic Versioning](https://semver.org) and a
 "born beta" workflow: early public versions, honest changelogs.
 
+## [0.2.1] — 2026-11-02 — Release-assets fix
+
+- Fixed the Tauri app build: the app crate now declares its own
+  workspace (the parent workspace excludes it), curing the
+  `cargo metadata` failure that broke every desktop and Android CI job
+  for 0.2.0 — installers now build and attach to the release.
+- CLI binaries are now attached to the GitHub release as well as kept
+  as workflow artifacts.
+- Android CI now installs the NDK explicitly.
+
 ## [0.2.0] — 2026-11-02 — Source Engine
 
 - **18 built-in free proxy sources** (52 files), fetched at runtime from
