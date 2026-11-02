@@ -4,6 +4,13 @@ All notable changes to Network Diagnostics, version by version.
 This project follows [Semantic Versioning](https://semver.org) and a
 "born beta" workflow: early public versions, honest changelogs.
 
+## [0.5.1] — 2026-11-02 — Icon format fix
+
+- The v0.5.0 icon set was saved as RGB PNGs; Tauri's build requires
+  **RGBA** icons, which failed the macOS, Linux and Android builds
+  ("icon 32x32.png is not RGBA") while Windows (ICO path) passed.
+  All icons regenerated as RGBA. No other changes.
+
 ## [0.5.0] — 2026-11-02 — The enterprise dashboard 👑 + power tools
 
 - **Brand & logo.** A real identity — crown over a diagnostics pulse

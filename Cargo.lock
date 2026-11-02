@@ -221,14 +221,14 @@ dependencies = [
 
 [[package]]
 name = "nd-check"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "nd-core",
 ]
 
 [[package]]
 name = "nd-core"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "ureq",
 ]
