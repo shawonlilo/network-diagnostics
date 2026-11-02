@@ -4,6 +4,20 @@ All notable changes to Network Diagnostics, version by version.
 This project follows [Semantic Versioning](https://semver.org) and a
 "born beta" workflow: early public versions, honest changelogs.
 
+## [0.3.1] — 2026-11-02 — Android arrives 🤖
+
+- **Android APK fixed.** Every Android build up to now failed in CI
+  with `no library targets found in package` — the app crate was a
+  desktop-style binary-only crate, and Tauri mobile builds require a
+  library target. The app is restructured the standard Tauri 2 way:
+  logic in `lib.rs` (`mobile_entry_point`), `main.rs` is a thin shim.
+  Desktop builds are unchanged.
+- The APK is **debug-signed** so it installs directly (sideload):
+  `app-universal-debug.apk`. Note the CI debug key changes per build,
+  so installing a newer APK over an older one may require uninstalling
+  the old app first — proper release signing is on the roadmap.
+- The Android CI job now attaches the APK to the release directly.
+
 ## [0.3.0] — 2026-11-02 — The GUI grows up 👑
 
 - **New dashboard GUI.** The first screen is now built around one hero

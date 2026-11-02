@@ -149,9 +149,20 @@ jobs:
         working-directory: app/src-tauri
         run: |
           cargo tauri android init
-          cargo tauri android build --apk || cargo tauri android build --apk --debug
+          # --debug: the APK is debug-signed, which makes it directly
+          # installable (sideload). A release APK would be unsigned and
+          # Android would refuse to install it without a keystore.
+          cargo tauri android build --apk --debug
       - uses: actions/upload-artifact@v4
         with:
           name: nd-android-apk
           path: app/src-tauri/gen/android/app/build/outputs/**/*.apk
           if-no-files-found: warn
+      - name: Attach the APK to the GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Network Diagnostics ${{ github.ref_name }}
+          files: app/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
+          fail_on_unmatched_files: false
