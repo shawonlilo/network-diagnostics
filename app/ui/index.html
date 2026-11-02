@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
@@ -6,226 +6,295 @@
 <title>Network Diagnostics — Free Proxy Checker</title>
 <style>
   :root{
-    --bg:#070a08; --bg2:#0b100c; --panel:rgba(20,28,22,.82); --panel2:rgba(14,20,16,.92);
+    --bg:#070a08; --bg2:#0b100c; --panel:rgba(20,28,22,.82); --panel2:rgba(14,20,16,.94);
     --line:#223528; --line2:#2e4a38; --text:#eaf5ee; --muted:#93a89b; --faint:#5f7267;
     --green:#34d399; --green2:#3fb950; --gold:#e3b341; --blue:#58a6ff; --amber:#d29922; --red:#f85149;
     --radius:16px;
   }
   *{box-sizing:border-box}
-  html,body{height:100%}
+  html,body{margin:0;padding:0}
   body{
-    margin:0;color:var(--text);
-    font:15px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",sans-serif;
+    color:var(--text);
+    font:15px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
     background:
-      radial-gradient(1100px 500px at 85% -10%, rgba(52,211,153,.13), transparent 60%),
-      radial-gradient(900px 480px at -10% 110%, rgba(227,179,65,.07), transparent 55%),
+      radial-gradient(1100px 480px at 85% -10%, rgba(227,179,65,.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 0%, rgba(52,211,153,.12), transparent 55%),
       linear-gradient(180deg,var(--bg2),var(--bg));
-    background-attachment:fixed;
+    min-height:100vh;
   }
   body::before{
-    content:"";position:fixed;inset:0;pointer-events:none;opacity:.35;
-    background-image:linear-gradient(rgba(52,211,153,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(52,211,153,.05) 1px,transparent 1px);
+    content:"";position:fixed;inset:0;pointer-events:none;opacity:.5;
+    background:
+      linear-gradient(rgba(52,211,153,.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(52,211,153,.045) 1px, transparent 1px);
     background-size:44px 44px;
-    mask-image:radial-gradient(ellipse at 50% 0%,black 30%,transparent 75%);
+    mask-image:radial-gradient(ellipse 90% 60% at 50% 0%, #000 30%, transparent 75%);
   }
-  .wrap{max-width:1240px;margin:0 auto;padding:26px 20px 56px;position:relative}
-  /* ---------- header ---------- */
-  header{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-  .logo{
-    width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-size:28px;
+  .wrap{max-width:1180px;margin:0 auto;padding:22px 18px 30px;position:relative}
+  /* ---------- brand bar ---------- */
+  .brand{
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;
     background:linear-gradient(145deg,#123324,#0a1a12);border:1px solid var(--line2);
-    box-shadow:0 0 0 1px rgba(52,211,153,.12),0 10px 30px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);
+    border-radius:20px;padding:16px 20px;margin-bottom:16px;
+    box-shadow:0 18px 50px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05);
   }
-  h1{font-size:25px;margin:0;letter-spacing:.2px}
-  h1 .crown{color:var(--gold)}
-  .tagline{color:var(--muted);margin:2px 0 0;font-size:14px}
+  .brand img{width:58px;height:58px;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+  .brand h1{font-size:23px;margin:0;letter-spacing:.2px;font-weight:800}
+  .brand h1 .crown{color:var(--gold)}
+  .tagline{color:var(--muted);margin:1px 0 0;font-size:13.5px}
   .tagline b{color:var(--green);font-weight:600}
-  .spacer{flex:1}
+  .brand .spacer{flex:1}
   .pill{
-    display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;
     background:var(--panel);border:1px solid var(--line);color:var(--muted);font-size:12.5px;font-weight:600;
   }
   .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+  .pill.gold{color:var(--gold);border-color:#4a3a14}
   /* ---------- layout ---------- */
-  .grid{display:grid;grid-template-columns:380px 1fr;gap:18px;margin-top:22px;align-items:start}
+  .grid{display:grid;grid-template-columns:400px 1fr;gap:16px;align-items:start}
   @media (max-width:980px){.grid{grid-template-columns:1fr}}
   .card{
     background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-    padding:18px;backdrop-filter:blur(8px);
-    box-shadow:0 14px 34px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.04);
+    padding:18px;backdrop-filter:blur(8px);box-shadow:0 10px 30px rgba(0,0,0,.35);
   }
-  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:1.4px;color:var(--faint);margin:0 0 12px;font-weight:700}
-  .sticky{position:sticky;top:18px}
+  .card + .card{margin-top:16px}
+  .card h2{font-size:12.5px;text-transform:uppercase;letter-spacing:1.4px;color:var(--faint);margin:0 0 12px;font-weight:700}
+  .card h2 .step{
+    display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;
+    background:linear-gradient(145deg,#1d5c40,#123324);color:var(--green);border:1px solid var(--line2);
+    font-size:11px;margin-right:7px;vertical-align:-4px;
+  }
+  .sticky{position:sticky;top:14px}
   @media (max-width:980px){.sticky{position:static}}
   /* ---------- hero action ---------- */
   .hero-btn{
-    width:100%;border:0;cursor:pointer;border-radius:14px;padding:17px 18px;text-align:left;color:#04160c;
-    background:linear-gradient(135deg,#4be38a,#22b573 55%,#149a5c);
-    box-shadow:0 12px 30px rgba(34,181,115,.35),inset 0 1px 0 rgba(255,255,255,.5);
-    display:flex;align-items:center;gap:13px;transition:transform .08s ease,box-shadow .2s ease,opacity .2s;
+    width:100%;border:0;cursor:pointer;border-radius:14px;padding:17px 16px;
+    background:linear-gradient(160deg,#2fe08f,#17a566 55%,#0d7a4a);color:#04160c;
+    font-size:18px;font-weight:800;letter-spacing:.2px;text-align:center;
+    box-shadow:0 12px 30px rgba(23,165,102,.35), inset 0 1px 0 rgba(255,255,255,.5);
+    transition:transform .08s ease, box-shadow .2s ease, filter .2s;
   }
-  .hero-btn:hover{transform:translateY(-1px);box-shadow:0 16px 36px rgba(34,181,115,.45),inset 0 1px 0 rgba(255,255,255,.5)}
-  .hero-btn:disabled{opacity:.55;cursor:wait;transform:none}
-  .hero-btn .big{font-size:18.5px;font-weight:800;letter-spacing:.2px;display:block}
-  .hero-btn .small{font-size:12.5px;font-weight:600;opacity:.75;display:block;margin-top:1px}
-  .hero-btn .icon{font-size:27px}
-  .or{display:flex;align-items:center;gap:10px;color:var(--faint);font-size:12px;margin:16px 0 4px;text-transform:uppercase;letter-spacing:1.2px}
+  .hero-btn:hover{filter:brightness(1.06);box-shadow:0 16px 38px rgba(23,165,102,.45), inset 0 1px 0 rgba(255,255,255,.5)}
+  .hero-btn:active{transform:translateY(1px) scale(.995)}
+  .hero-btn:disabled{opacity:.55;cursor:wait}
+  .hero-btn small{display:block;font-size:12.5px;font-weight:700;opacity:.78;margin-top:3px}
+  .checkline{display:flex;align-items:center;gap:8px;margin-top:11px;color:var(--muted);font-size:13.5px}
+  .checkline input{width:16px;height:16px;accent-color:var(--green2)}
+  .or{display:flex;align-items:center;gap:10px;color:var(--faint);font-size:11.5px;margin:16px 0 10px;text-transform:uppercase;letter-spacing:1.2px}
   .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
-  label{display:block;margin:13px 0 6px;color:var(--muted);font-size:13px;font-weight:600}
-  textarea,input[type=text]{
-    width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:12px;
-    padding:11px 12px;font:inherit;font-size:13.5px;outline:none;transition:border-color .15s, box-shadow .15s;
+  /* ---------- inputs ---------- */
+  label.f{display:block;font-size:12.5px;color:var(--muted);margin:13px 0 6px;font-weight:600}
+  textarea, input[type=text]{
+    width:100%;background:#0a0f0b;border:1px solid var(--line);border-radius:10px;color:var(--text);
+    padding:10px 12px;font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;outline:none;
   }
-  textarea{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;min-height:118px;resize:vertical}
-  textarea:focus,input[type=text]:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(52,211,153,.18)}
-  .rowline{display:flex;align-items:center;gap:9px}
-  .count{color:var(--faint);font-size:12px;margin-left:auto;font-variant-numeric:tabular-nums}
-  .check-btn{
-    width:100%;margin-top:14px;border:1px solid var(--line2);cursor:pointer;border-radius:12px;padding:13px;
-    background:linear-gradient(180deg,#1d2f24,#152219);color:var(--text);font-weight:700;font-size:15px;
-    transition:border-color .15s, transform .08s;
+  input[type=text]{font-family:inherit}
+  textarea:focus, input[type=text]:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(52,211,153,.15)}
+  textarea{resize:vertical;min-height:118px}
+  .dropzone{border-radius:12px;transition:box-shadow .15s,border-color .15s}
+  .dropzone.drag{box-shadow:0 0 0 3px rgba(227,179,65,.55);border-radius:12px}
+  .dropzone.drag textarea{border-color:var(--gold)}
+  .rowline{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+  .count{font-size:12px;color:var(--faint)}
+  .btnrow{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+  button.act{
+    border:1px solid var(--line2);background:#12241a;color:var(--text);border-radius:11px;
+    padding:10px 14px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;
   }
-  .check-btn:hover{border-color:var(--green)}
-  .check-btn:disabled{opacity:.5;cursor:wait}
-  .stop-btn{background:linear-gradient(180deg,#3a1d1d,#2a1414);border-color:#5a2b2b}
-  .switch{display:flex;align-items:center;gap:9px;margin-top:13px;color:var(--muted);font-size:13px;cursor:pointer;user-select:none}
-  .switch input{accent-color:var(--green2);width:16px;height:16px;cursor:pointer}
-  .note{color:var(--faint);font-size:12.5px;line-height:1.5}
+  button.act:hover{border-color:var(--green);background:#16382a}
+  button.act:disabled{opacity:.5;cursor:wait}
+  button.primary{background:linear-gradient(160deg,#2fe08f,#149a63);color:#04160c;border:0;flex:1;min-width:150px}
+  button.primary:hover{filter:brightness(1.07)}
+  button.stop-btn{background:linear-gradient(160deg,#f87171,#c23325);color:#fff;border:0;flex:1}
+  .upload-btn{flex:1;min-width:150px;text-align:center}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+  .preset{
+    font-size:12px;padding:5px 11px;border-radius:999px;border:1px solid var(--line);
+    background:#0d150f;color:var(--muted);cursor:pointer;font-weight:600;
+  }
+  .preset:hover{border-color:var(--gold);color:var(--gold)}
+  /* ---------- progress ---------- */
+  .progress{display:none;margin-top:14px}
+  .progress.on{display:block}
+  .pbar{height:9px;background:#0a0f0b;border:1px solid var(--line);border-radius:99px;overflow:hidden}
+  .pfill{height:100%;width:0%;background:linear-gradient(90deg,var(--green2),var(--green),var(--gold));transition:width .25s;border-radius:99px}
+  .pmeta{display:flex;justify-content:space-between;color:var(--muted);font-size:12.5px;margin-top:6px}
   /* ---------- stats ---------- */
   .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
   @media (max-width:980px){.stats{grid-template-columns:repeat(3,1fr)}}
   .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 13px}
   .stat .num{font-size:21px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
-  .stat .lbl{color:var(--faint);font-size:11.5px;text-transform:uppercase;letter-spacing:.8px;margin-top:3px;font-weight:700}
+  .stat .lbl{color:var(--faint);font-size:11px;text-transform:uppercase;letter-spacing:.8px;margin-top:3px;font-weight:700}
   .stat.hot .num{color:var(--green)} .stat.gold .num{color:var(--gold)}
-  /* ---------- progress ---------- */
-  .progress-wrap{display:none;margin:0 0 14px}
-  .progress-wrap.on{display:block}
-  .pbar{height:10px;border-radius:99px;background:#12241a;border:1px solid var(--line);overflow:hidden}
-  .pfill{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#22b573,#4be38a);box-shadow:0 0 14px rgba(75,227,138,.55);transition:width .3s ease}
-  .pmeta{display:flex;justify-content:space-between;color:var(--muted);font-size:12.5px;margin-top:6px;font-variant-numeric:tabular-nums}
-  /* ---------- results ---------- */
-  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  /* ---------- filters / search ---------- */
+  .filters{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
   .chip{
-    border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:999px;
-    padding:7px 13px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;
+    border:1px solid var(--line);background:#0d150f;color:var(--muted);border-radius:999px;
+    padding:6px 13px;font-size:13px;cursor:pointer;font-weight:600;transition:.15s;
   }
   .chip:hover{border-color:var(--line2);color:var(--text)}
-  .chip.on{background:rgba(52,211,153,.14);border-color:var(--green);color:var(--green)}
-  .tablewrap{border:1px solid var(--line);border-radius:14px;overflow:auto;max-height:560px;background:var(--panel2)}
-  table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:640px}
-  thead th{
-    position:sticky;top:0;background:#0d1710;color:var(--faint);text-align:left;font-size:11.5px;
-    text-transform:uppercase;letter-spacing:.9px;padding:11px 12px;border-bottom:1px solid var(--line);z-index:1;
+  .chip.on{background:#173d29;color:var(--green);border-color:var(--green)}
+  .searchbox{flex:1;min-width:150px}
+  .searchbox input{padding:8px 12px;font-size:13.5px}
+  /* ---------- table ---------- */
+  .tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px;margin-top:12px;max-height:560px;background:var(--panel2)}
+  table{border-collapse:collapse;width:100%;font-size:13.5px}
+  th{
+    text-align:left;color:var(--faint);font-size:11px;text-transform:uppercase;letter-spacing:.9px;
+    padding:10px 12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#0d130e;z-index:1;
   }
-  tbody td{padding:9px 12px;border-bottom:1px solid rgba(34,53,40,.55);vertical-align:middle}
-  tbody tr:hover{background:rgba(52,211,153,.05)}
-  .mono{font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
-  .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap}
-  .b-ok{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.4)}
-  .b-dead{background:rgba(248,81,73,.12);color:var(--red);border:1px solid rgba(248,81,73,.35)}
-  .b-elite{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.4)}
-  .b-anon{background:rgba(88,166,255,.13);color:var(--blue);border:1px solid rgba(88,166,255,.35)}
-  .b-trans{background:rgba(210,153,34,.14);color:var(--amber);border:1px solid rgba(210,153,34,.4)}
-  .b-res{background:rgba(227,179,65,.13);color:var(--gold);border:1px solid rgba(227,179,65,.35)}
-  .b-dc{background:rgba(147,168,155,.12);color:var(--muted);border:1px solid var(--line2)}
-  .speedbar{width:64px;height:6px;border-radius:99px;background:#12241a;display:inline-block;vertical-align:middle;margin-right:7px;overflow:hidden}
-  .speedbar i{display:block;height:100%;background:linear-gradient(90deg,#22b573,#4be38a);border-radius:99px}
-  .empty{padding:44px 20px;text-align:center;color:var(--faint)}
+  td{padding:9px 12px;border-bottom:1px solid rgba(34,53,40,.55);vertical-align:middle}
+  tr:hover td{background:rgba(52,211,153,.045)}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.8px}
+  .badge{display:inline-block;padding:2.5px 9px;border-radius:999px;font-size:11.8px;font-weight:700;white-space:nowrap}
+  .b-ok{background:rgba(63,185,80,.16);color:#4ade80;border:1px solid rgba(63,185,80,.4)}
+  .b-dead{background:rgba(248,81,73,.12);color:#f87171;border:1px solid rgba(248,81,73,.35)}
+  .b-elite{background:rgba(227,179,65,.15);color:var(--gold);border:1px solid rgba(227,179,65,.45)}
+  .b-anon{background:rgba(88,166,255,.13);color:var(--blue);border:1px solid rgba(88,166,255,.4)}
+  .b-trans{background:rgba(210,153,34,.13);color:var(--amber);border:1px solid rgba(210,153,34,.4)}
+  .b-res{background:rgba(52,211,153,.13);color:var(--green);border:1px solid rgba(52,211,153,.4)}
+  .b-dc{background:rgba(147,168,155,.13);color:var(--muted);border:1px solid rgba(147,168,155,.35)}
+  .speedbar{display:inline-block;width:52px;height:6px;background:#1a2a1f;border-radius:99px;overflow:hidden;vertical-align:middle;margin-right:7px}
+  .speedbar i{display:block;height:100%;background:linear-gradient(90deg,var(--green2),var(--gold))}
+  .empty{padding:36px 18px;text-align:center;color:var(--muted)}
   .empty .big{font-size:34px;margin-bottom:8px}
-  .exports{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  /* ---------- exports ---------- */
+  .xgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:9px}
   .xbtn{
-    border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:11px;padding:9px 14px;
-    font-size:13px;font-weight:600;cursor:pointer;transition:border-color .15s;
+    border:1px solid var(--line);background:#0d150f;color:var(--text);border-radius:11px;
+    padding:11px 12px;font-size:13.5px;font-weight:700;cursor:pointer;text-align:left;transition:.15s;line-height:1.35;
   }
   .xbtn:hover{border-color:var(--green)}
-  #status{margin-top:12px;color:var(--muted);font-size:13.5px;min-height:20px}
-  #status.err{color:var(--red)}
-  .domain-out{margin-top:10px;font-size:13.5px;color:var(--muted);white-space:pre-wrap;word-break:break-word}
-  footer{margin-top:26px;color:var(--faint);font-size:12.5px;text-align:center}
-  ::-webkit-scrollbar{width:10px;height:10px} ::-webkit-scrollbar-thumb{background:#223528;border-radius:99px} ::-webkit-scrollbar-track{background:transparent}
+  .xbtn small{display:block;color:var(--faint);font-weight:600;font-size:11.5px;margin-top:2px}
+  .note{color:var(--faint);font-size:12.8px;margin:12px 0 0}
+  .note b{color:var(--muted)}
+  #status{margin-top:13px;font-size:14px;min-height:21px;color:var(--green)}
+  #status.err{color:#f87171}
+  .domainout{
+    white-space:pre-wrap;background:#0a0f0b;border:1px solid var(--line);border-radius:10px;
+    padding:11px 12px;font:12.8px/1.6 ui-monospace,Menlo,Consolas,monospace;color:var(--muted);min-height:44px;margin-top:10px;
+  }
+  footer{color:var(--faint);font-size:12.5px;text-align:center;margin-top:18px}
+  /* ---------- toast ---------- */
+  #toast{
+    position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);
+    background:#10231a;border:1px solid var(--green);color:var(--text);border-radius:12px;
+    padding:11px 17px;font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:50;
+    max-width:92vw;box-shadow:0 14px 40px rgba(0,0,0,.55);word-break:break-all;
+  }
+  #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
   /* ---------- phones ---------- */
   @media (max-width:640px){
+    .wrap{padding:14px 10px 24px}
+    .brand{padding:13px 14px;gap:11px}
+    .brand img{width:46px;height:46px;border-radius:11px}
+    .brand h1{font-size:19px}
     .stats{grid-template-columns:repeat(2,1fr)}
     .stat .num{font-size:19px}
     button,.chip{min-height:44px}
-    .hero-btn{font-size:17px;padding:16px 14px;width:100%}
+    .chip{min-height:38px}
+    .hero-btn{font-size:17px;padding:16px 12px}
     table{font-size:12.5px}
     th,td{padding:8px 7px}
-    input[type=text],textarea{font-size:16px} /* 16px stops iOS/Android auto-zoom on focus */
+    input[type=text],textarea{font-size:16px} /* stops mobile auto-zoom on focus */
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div class="logo">👑</div>
+
+  <div class="brand">
+    <img src="logo.png" alt="Network Diagnostics logo" />
     <div>
-      <h1>Network Diagnostics <span class="crown">— Free Proxy Checker</span></h1>
-      <p class="tagline">One click gets you <b>fresh free proxies</b> from 18 public sources — checked live on your own machine for speed, anonymity and residential vs datacenter.</p>
+      <h1><span class="crown">👑</span> Network Diagnostics</h1>
+      <p class="tagline">Enterprise-grade <b>free proxy checker</b> — speed, anonymity &amp; network type, tested on your own device.</p>
     </div>
     <div class="spacer"></div>
-    <span class="pill"><span class="dot"></span> 100% local · no uploads · MIT</span>
-  </header>
+    <span class="pill gold">v0.5.0</span>
+    <span class="pill"><span class="dot"></span> 100% local · nothing uploaded</span>
+  </div>
 
   <div class="grid">
-    <!-- ======= control panel ======= -->
     <div class="sticky">
       <div class="card">
-        <h2>🚀 Get proxies</h2>
-        <button class="hero-btn" id="heroFetch">
-          <span class="icon">⚡</span>
-          <span><span class="big">GET FREE PROXIES</span><span class="small">Fetch 18 sources · 67,000+ proxies · auto-check</span></span>
-        </button>
-        <label class="switch"><input type="checkbox" id="autoCheck" checked /> Auto-check right after fetching</label>
-        <p class="note" style="margin-top:10px">Sources are fetched live from their publishers (TheSpeedX, monosans, ProxyScrape, proxifly and 14 more — full credits in the repo's THANKS.md). Most free proxies are already dead; checking is what finds the working few.</p>
+        <h2><span class="step">1</span>Get proxies</h2>
+        <button class="hero-btn" id="heroFetch">⚡ GET FREE PROXIES<small>18 sources · 67,000+ proxies · one click</small></button>
+        <label class="checkline"><input type="checkbox" id="autoCheck" checked /> Check automatically after fetching</label>
 
-        <div class="or">or paste your own list</div>
-        <label for="list">Proxy list — one per line <span class="count" id="lineCount">0 lines</span></label>
-        <textarea id="list" placeholder="203.0.113.10:8080&#10;socks5://198.51.100.7:1080&#10;http://user:pass@192.0.2.55:3128"></textarea>
+        <div class="or">or bring your own list</div>
+        <div class="btnrow" style="margin-top:0">
+          <button class="act upload-btn" id="uploadBtn">📂 Upload list file</button>
+          <input type="file" id="fileInput" accept=".txt,.csv,.lst,.list,text/plain" hidden />
+        </div>
+        <label class="f" for="urlInput">🔗 …or import a list from a URL</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="urlInput" placeholder="https://example.com/proxies.txt" style="flex:1" />
+          <button class="act" id="urlLoad">Load</button>
+        </div>
+        <div class="dropzone" id="dropZone">
+          <label class="f" for="list">Paste proxies — or drag &amp; drop a file here (one per line: <span class="mono">host:port</span> or <span class="mono">socks5://host:port</span>)</label>
+          <textarea id="list" placeholder="203.0.113.10:8080&#10;socks5://198.51.100.7:1080"></textarea>
+        </div>
+        <div class="rowline"><span class="count" id="lineCount">0 lines</span><span class="count">HTTP · HTTPS · SOCKS4 · SOCKS5</span></div>
 
-        <label for="target">🎯 Target site — the site you actually need to reach (optional)</label>
-        <input type="text" id="target" placeholder="https://example.com" />
+        <label class="f" for="target">🎯 Target site test <span style="color:var(--faint)">(optional — must the proxy open this site?)</span></label>
+        <input type="text" id="target" placeholder="https://www.youtube.com" />
+        <div class="presets">
+          <button class="preset" data-t="https://www.youtube.com">▶ YouTube</button>
+          <button class="preset" data-t="https://www.google.com">Google</button>
+          <button class="preset" data-t="https://gab.com">gab.com</button>
+          <button class="preset" data-t="">✕ none</button>
+        </div>
 
-        <button class="check-btn" id="check">✅ Check proxies</button>
+        <div class="btnrow">
+          <button class="act primary" id="check">✅ Check proxies</button>
+        </div>
+        <div class="progress" id="progressWrap">
+          <div class="pbar"><div class="pfill" id="pfill"></div></div>
+          <div class="pmeta"><span id="ptext">Checking…</span><span id="ptime">0s</span></div>
+        </div>
         <div id="status"></div>
+        <div class="or">keep it fresh</div>
+        <label class="checkline" style="margin-top:0"><input type="checkbox" id="keepAlive" /> ♻️ Keep-alive: re-check working proxies every
+          <select id="keepEvery" style="background:#0a0f0b;color:var(--text);border:1px solid var(--line);border-radius:7px;padding:3px 6px">
+            <option value="5">5 min</option><option value="15" selected>15 min</option><option value="30">30 min</option>
+          </select>
+        </label>
+        <label class="checkline"><input type="checkbox" id="keepRefetch" /> If none survive, fetch a fresh batch automatically</label>
       </div>
 
-      <div class="card" style="margin-top:18px">
-        <h2>🌍 Domain health</h2>
-        <div class="rowline">
-          <input type="text" id="domain" placeholder="example.com" />
-          <button class="xbtn" id="domainBtn" style="white-space:nowrap">Check</button>
-        </div>
-        <div class="domain-out" id="domainOut">A · MX · SPF · DMARC in one pass, in plain words.</div>
+      <div class="card">
+        <h2>🌐 Domain health</h2>
+        <label class="f" for="domain" style="margin-top:0">Check a domain's DNS, mail &amp; anti-spoof records</label>
+        <input type="text" id="domain" placeholder="example.com" />
+        <div class="btnrow"><button class="act" id="domainBtn">🩺 Check domain</button></div>
+        <div class="domainout" id="domainOut">A / MX / SPF / DMARC verdict appears here.</div>
       </div>
     </div>
 
-    <!-- ======= results ======= -->
     <div>
       <div class="stats">
-        <div class="stat"><div class="num" id="stFetched">0</div><div class="lbl">Fetched</div></div>
-        <div class="stat"><div class="num" id="stChecked">0</div><div class="lbl">Checked</div></div>
+        <div class="stat"><div class="num" id="stFetched">0</div><div class="lbl">📚 Fetched</div></div>
+        <div class="stat"><div class="num" id="stChecked">0</div><div class="lbl">🔍 Checked</div></div>
         <div class="stat hot"><div class="num" id="stWorking">0</div><div class="lbl">✅ Working</div></div>
-        <div class="stat"><div class="num" id="stElite">0</div><div class="lbl">🥷 Elite</div></div>
-        <div class="stat gold"><div class="num" id="stRes">0</div><div class="lbl">🏠 Residential</div></div>
+        <div class="stat gold"><div class="num" id="stElite">0</div><div class="lbl">🥷 Elite</div></div>
+        <div class="stat"><div class="num" id="stRes">0</div><div class="lbl">🏠 Residential</div></div>
         <div class="stat"><div class="num" id="stFast">—</div><div class="lbl">⚡ Fastest</div></div>
       </div>
 
-      <div class="progress-wrap" id="progressWrap">
-        <div class="pbar"><div class="pfill" id="pfill"></div></div>
-        <div class="pmeta"><span id="ptext">Checking…</span><span id="ptime">0s</span></div>
-      </div>
-
-      <div class="card" style="padding:14px">
+      <div class="card">
+        <h2><span class="step">2</span>Results</h2>
         <div class="filters" id="filters">
           <button class="chip on" data-f="all">All</button>
           <button class="chip" data-f="working">✅ Working</button>
           <button class="chip" data-f="elite">🥷 Elite</button>
+          <button class="chip" data-f="favorites">⭐ Favorites</button>
           <button class="chip" data-f="residential">🏠 Residential</button>
           <button class="chip" data-f="target">🎯 Target pass</button>
-          <button class="chip" data-f="dead">Dead</button>
+          <button class="chip" data-f="dead">💀 Dead</button>
+          <span class="searchbox"><input type="text" id="searchBox" placeholder="🔎 Search proxy, IP or country…" /></span>
         </div>
+        <div class="note" id="countryLine" style="margin:10px 0 0"></div>
         <div class="tablewrap">
           <table>
             <thead><tr><th>Status</th><th>Proxy</th><th>Speed</th><th>Anonymity</th><th>Network</th><th>Exit IP</th><th>Target</th></tr></thead>
@@ -233,43 +302,102 @@
           </table>
           <div class="empty" id="emptyState">
             <div class="big">🛰️</div>
-            Nothing checked yet.<br/>Press <b>⚡ GET FREE PROXIES</b> — or paste a list and hit <b>✅ Check proxies</b>.
+            No results yet.<br/>Press <b>⚡ GET FREE PROXIES</b> — or upload / paste your own list and hit <b>✅ Check proxies</b>.
           </div>
         </div>
-        <div class="exports">
-          <button class="xbtn" id="copyWorking">📋 Copy working</button>
-          <button class="xbtn" id="dlTxt">⬇️ working.txt</button>
-          <button class="xbtn" id="dlRes">🏠 residential.txt</button>
-          <button class="xbtn" id="dlDc">🏢 datacenter.txt</button>
-          <button class="xbtn" id="dlJson">⬇️ Full report .json</button>
+      </div>
+
+      <div class="card">
+        <h2><span class="step">3</span>Export — take your proxies anywhere</h2>
+        <div class="xgrid">
+          <button class="xbtn" id="dlTxt">⬇️ working.txt<small>working proxies, one per line</small></button>
+          <button class="xbtn" id="dlAll">⬇️ all-checked.txt<small>every tested proxy</small></button>
+          <button class="xbtn" id="dlRes">🏠 residential.txt<small>working residential only</small></button>
+          <button class="xbtn" id="dlDc">🏢 datacenter.txt<small>working datacenter only</small></button>
+          <button class="xbtn" id="dlCsv">📊 results.csv<small>full table for Excel / Sheets</small></button>
+          <button class="xbtn" id="dlPdf">📄 report.pdf<small>print-ready summary report</small></button>
+          <button class="xbtn" id="dlJson">🧾 report.json<small>complete machine-readable data</small></button>
+          <button class="xbtn" id="dlTop">🏆 top-50-fastest.txt<small>the 50 quickest working proxies</small></button>
+          <button class="xbtn" id="dlFav">⭐ favorites.txt<small>your starred proxies</small></button>
+          <button class="xbtn" id="shareWorking">📤 Share working<small>send via your apps, or copy</small></button>
+          <button class="xbtn" id="copyWorking">📋 Copy working<small>straight to clipboard</small></button>
+          <button class="xbtn" id="copyAll">📋 Copy all<small>every checked proxy</small></button>
         </div>
-        <p class="note" style="margin-top:12px"><b>🥷 elite</b> = the site cannot tell a proxy is involved · <b>🕵️ anonymous</b> = it can tell, but cannot see your IP · <b>⚠️ transparent</b> = it can see your real IP — avoid for private work. Large lists are checked in batches with live progress; a fetched list is capped at the first 6,000 for checking so a run stays practical.</p>
+        <p class="note">Files save to your <b>Downloads</b> folder inside the app. <b>🥷 elite</b> = the site cannot tell a proxy is involved · <b>🕵️ anonymous</b> = it can tell, but cannot see your IP · <b>⚠️ transparent</b> = it can see your real IP — avoid for private work. Large lists are checked in batches with live progress; a run is capped at the first 6,000 so it stays practical.</p>
       </div>
     </div>
   </div>
 
   <footer>Your list never leaves this device — checking runs locally, from your own network. Only test proxies you own or are authorized to test. 👑 Network Diagnostics · free &amp; open source (MIT)</footer>
 </div>
+<div id="toast"></div>
 
 <script>
   const $ = id => document.getElementById(id);
   const tauri = window.__TAURI__ && window.__TAURI__.core;
   const CHECK_CAP = 6000, CHUNK = 200;
-  let allResults = [], filter = 'all', cancelRun = false, runTimer = null;
-
-  function setStatus(msg, isErr){ const s = $('status'); s.textContent = msg; s.className = isErr ? 'err' : ''; }
-  function download(name, text){
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([text], {type:'text/plain'}));
-    a.download = name; a.click(); URL.revokeObjectURL(a.href);
+  let allResults = [], filter = 'all', query = '', cancelRun = false, runTimer = null, toastTimer = null, isBusy = false, prevLat = {};
+  /* Favorites + last-run latencies persist on this device only. */
+  let favs = new Set();
+  try{ favs = new Set(JSON.parse(localStorage.getItem('nd_favorites') || '[]')); }catch(e){}
+  function saveFavs(){ try{ localStorage.setItem('nd_favorites', JSON.stringify([...favs])); }catch(e){} }
+  function loadPrevLat(){ try{ return JSON.parse(localStorage.getItem('nd_last_latency') || '{}'); }catch(e){ return {}; } }
+  function saveLat(){
+    const m = {};
+    for(const r of allResults) if(r.alive && r.latency_ms != null) m[r.proxy] = r.latency_ms;
+    try{ localStorage.setItem('nd_last_latency', JSON.stringify(m)); }catch(e){}
   }
+
+  function toast(msg){
+    const t = $('toast'); t.textContent = msg; t.classList.add('on');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 3400);
+  }
+  function setStatus(msg, isErr){ const s = $('status'); s.textContent = msg; s.className = isErr ? 'err' : ''; }
   function lineText(r){ return (r.protocol ? r.protocol + '://' : '') + r.proxy; }
+
+  /* ---------- saving: backend file write (works on Android too) with blob fallback ---------- */
+  function b64(bytes){ let s = ''; bytes.forEach(b => s += String.fromCharCode(b)); return btoa(s); }
+  async function saveFile(name, text, bytes){
+    if(tauri){
+      try{
+        const path = await tauri.invoke('save_export', {
+          filename: name,
+          content: bytes ? null : text,
+          contentB64: bytes ? b64(bytes) : null
+        });
+        toast('💾 Saved: ' + path); return;
+      }catch(e){ /* fall through to browser download */ }
+    }
+    const blob = new Blob([bytes || text], {type: 'application/octet-stream'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    toast('💾 Download started: ' + name);
+  }
+
+  /* ---------- list input: paste, upload, drag & drop ---------- */
   function updateLineCount(){
     const n = $('list').value.split('\n').filter(l => l.trim()).length;
     $('lineCount').textContent = n.toLocaleString() + ' lines';
   }
   $('list').addEventListener('input', updateLineCount);
+  async function loadFile(file){
+    if(!file) return;
+    const text = await file.text();
+    $('list').value = text; updateLineCount();
+    const n = text.split('\n').filter(l => l.trim()).length;
+    toast('📂 Loaded ' + file.name + ' — ' + n.toLocaleString() + ' lines');
+    setStatus('📂 ' + file.name + ' loaded (' + n.toLocaleString() + ' lines). Press ✅ Check proxies.');
+  }
+  $('uploadBtn').addEventListener('click', () => $('fileInput').click());
+  $('fileInput').addEventListener('change', e => { loadFile(e.target.files[0]); e.target.value = ''; });
+  const dz = $('dropZone');
+  ['dragenter', 'dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('drag'); }));
+  ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('drag'); }));
+  dz.addEventListener('drop', e => { const f = e.dataTransfer.files && e.dataTransfer.files[0]; if(f) loadFile(f); });
+  document.querySelectorAll('.preset').forEach(b => b.addEventListener('click', () => { $('target').value = b.dataset.t; }));
 
+  /* ---------- stats / filters / table ---------- */
   function stats(){
     const w = allResults.filter(r => r.alive);
     $('stChecked').textContent = allResults.length.toLocaleString();
@@ -278,14 +406,31 @@
     $('stRes').textContent = w.filter(r => r.ip_type === 'residential').length.toLocaleString();
     const fast = w.reduce((m, r) => (r.latency_ms != null && (m == null || r.latency_ms < m)) ? r.latency_ms : m, null);
     $('stFast').textContent = fast == null ? '—' : fast + ' ms';
+    const byCountry = {};
+    for(const r of w) if(r.country) byCountry[r.country] = (byCountry[r.country] || 0) + 1;
+    const top = Object.entries(byCountry).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    $('countryLine').textContent = top.length ? '🌍 Working by country: ' + top.map(([c, n]) => c + ' ' + n).join(' · ') : '';
+  }
+  function trendHtml(r){
+    const prev = prevLat[r.proxy];
+    if(prev == null || r.latency_ms == null || !r.alive) return '';
+    const d = Math.round((r.latency_ms - prev) / prev * 100);
+    if(Math.abs(d) < 10) return '';
+    return d < 0
+      ? ' <span style="color:var(--green);font-weight:700" title="Faster than last run">↘' + Math.abs(d) + '%</span>'
+      : ' <span style="color:#f87171;font-weight:700" title="Slower than last run">↗' + d + '%</span>';
   }
   function passFilter(r){
-    if(filter === 'all') return true;
-    if(filter === 'working') return r.alive;
-    if(filter === 'elite') return r.alive && r.anonymity === 'elite';
-    if(filter === 'residential') return r.alive && r.ip_type === 'residential';
-    if(filter === 'target') return r.alive && r.target_ok === true;
-    if(filter === 'dead') return !r.alive;
+    if(filter === 'working' && !r.alive) return false;
+    if(filter === 'elite' && !(r.alive && r.anonymity === 'elite')) return false;
+    if(filter === 'residential' && !(r.alive && r.ip_type === 'residential')) return false;
+    if(filter === 'target' && !(r.alive && r.target_ok === true)) return false;
+    if(filter === 'dead' && r.alive) return false;
+    if(filter === 'favorites' && !favs.has(r.proxy)) return false;
+    if(query){
+      const q = query.toLowerCase();
+      if(!(r.proxy.toLowerCase().includes(q) || (r.exit_ip || '').toLowerCase().includes(q) || (r.country || '').toLowerCase().includes(q))) return false;
+    }
     return true;
   }
   function anonBadge(r){
@@ -301,16 +446,16 @@
   function render(){
     const tb = $('rows'); tb.innerHTML = '';
     const frag = document.createDocumentFragment();
-    let shown = 0;
     for(const r of allResults){
       if(!passFilter(r)) continue;
-      shown++;
       const tr = document.createElement('tr');
       const pct = r.latency_ms != null ? Math.max(4, 100 - Math.min(96, r.latency_ms / 30)) : 0;
+      const star = '<span class="star" data-proxy="' + r.proxy + '" title="Star as favorite" style="cursor:pointer;font-size:15px;margin-right:6px;color:' +
+        (favs.has(r.proxy) ? 'var(--gold)' : 'var(--faint)') + '">' + (favs.has(r.proxy) ? '★' : '☆') + '</span>';
       tr.innerHTML =
         '<td>' + (r.alive ? '<span class="badge b-ok">● works</span>' : '<span class="badge b-dead">● dead</span>') + '</td>' +
-        '<td class="mono">' + lineText(r) + '</td>' +
-        '<td>' + (r.latency_ms != null ? '<span class="speedbar"><i style="width:' + pct + '%"></i></span>' + r.latency_ms + ' ms' : '—') + '</td>' +
+        '<td class="mono">' + star + lineText(r) + (r.country ? ' <span style="color:var(--faint)">· ' + r.country + '</span>' : '') + '</td>' +
+        '<td>' + (r.latency_ms != null ? '<span class="speedbar"><i style="width:' + pct + '%"></i></span>' + r.latency_ms + ' ms' + trendHtml(r) : '—') + '</td>' +
         '<td>' + anonBadge(r) + '</td>' +
         '<td>' + netBadge(r) + '</td>' +
         '<td class="mono">' + (r.exit_ip || '—') + '</td>' +
@@ -326,12 +471,23 @@
     document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
     b.classList.add('on'); filter = b.dataset.f; render();
   });
+  $('searchBox').addEventListener('input', e => { query = e.target.value.trim(); render(); });
+  $('rows').addEventListener('click', e => {
+    const s = e.target.closest('.star'); if(!s) return;
+    const p = s.dataset.proxy;
+    if(favs.has(p)){ favs.delete(p); toast('☆ Removed from favorites: ' + p); }
+    else { favs.add(p); toast('⭐ Favorited: ' + p); }
+    saveFavs(); render();
+  });
 
+  /* ---------- checking (batched, with progress + stop) ---------- */
   function setBusy(busy){
+    isBusy = busy;
     $('heroFetch').disabled = busy;
     $('check').disabled = false; // stays clickable: during a run it is the Stop button
     $('check').textContent = busy ? '⏹ Stop checking' : '✅ Check proxies';
     $('check').classList.toggle('stop-btn', busy);
+    $('check').classList.toggle('primary', !busy);
   }
   function progress(done, total, startedAt){
     $('progressWrap').classList.add('on');
@@ -339,10 +495,10 @@
     $('ptext').textContent = 'Checking… ' + done.toLocaleString() + ' / ' + total.toLocaleString();
     $('ptime').textContent = Math.round((Date.now() - startedAt) / 1000) + 's';
   }
-
   async function runChecks(lines){
     const total = lines.length;
     const startedAt = Date.now();
+    prevLat = loadPrevLat();
     cancelRun = false; setBusy(true);
     allResults = []; render(); progress(0, total, startedAt);
     runTimer = setInterval(() => progress(allResults.length, total, startedAt), 500);
@@ -364,30 +520,28 @@
         allResults = allResults.concat(part);
         progress(allResults.length, total, startedAt); render();
       }
-      // Final: working first, fastest first.
       allResults.sort((a, b) => (b.alive - a.alive) || ((a.latency_ms ?? 1e9) - (b.latency_ms ?? 1e9)));
-      render();
+      render(); saveLat();
       const w = allResults.filter(r => r.alive).length;
       setStatus(cancelRun ? 'Stopped — ' + w + ' working found so far.' :
         'Done 🎉 — ' + w.toLocaleString() + ' of ' + allResults.length.toLocaleString() + ' proxies work.');
+      if(!cancelRun && w) toast('🎉 Done — ' + w.toLocaleString() + ' working proxies. Export them below ⬇️');
     }catch(e){
       setStatus('Something went wrong: ' + e, true);
     }
     clearInterval(runTimer); setBusy(false);
     setTimeout(() => $('progressWrap').classList.remove('on'), 1200);
   }
-
   $('check').addEventListener('click', () => {
-    if($('check').classList.contains('stop-btn') && $('check').textContent.includes('Stop')){ cancelRun = true; return; }
+    if($('check').classList.contains('stop-btn')){ cancelRun = true; return; }
     let lines = $('list').value.split('\n').map(l => l.trim()).filter(Boolean);
-    if(!lines.length){ setStatus('Paste at least one proxy first — or press GET FREE PROXIES. ⚡', true); return; }
+    if(!lines.length){ setStatus('Add proxies first — fetch, upload a file, or paste a list. ⚡', true); return; }
     if(lines.length > CHECK_CAP){
       setStatus('Checking the first ' + CHECK_CAP.toLocaleString() + ' of ' + lines.length.toLocaleString() + ' lines (cap for a practical run).');
       lines = lines.slice(0, CHECK_CAP);
     }
     runChecks(lines);
   });
-
   $('heroFetch').addEventListener('click', async () => {
     if(!tauri){ setStatus('Demo mode — fetching works inside the installed app.'); return; }
     $('heroFetch').disabled = true;
@@ -409,6 +563,7 @@
     $('heroFetch').disabled = false;
   });
 
+  /* ---------- domain health ---------- */
   $('domainBtn').addEventListener('click', async () => {
     const d = $('domain').value.trim();
     if(!d){ $('domainOut').textContent = 'Type a domain first.'; return; }
@@ -421,14 +576,133 @@
     }catch(e){ $('domainOut').textContent = 'Failed: ' + e; }
   });
 
-  $('copyWorking').addEventListener('click', () => {
-    navigator.clipboard.writeText(allResults.filter(r => r.alive).map(lineText).join('\n'));
-    setStatus('📋 Working proxies copied.');
+  /* ---------- exports ---------- */
+  function needResults(){ if(!allResults.length){ setStatus('Nothing to export yet — run a check first.', true); return true; } return false; }
+  function csvCell(v){ v = (v == null ? '' : String(v)); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+  function toCsv(){
+    const head = 'proxy,protocol,status,latency_ms,anonymity,network,exit_ip,target';
+    const lines = allResults.map(r => [r.proxy, r.protocol || '', r.alive ? 'working' : 'dead',
+      r.latency_ms ?? '', r.anonymity || '', r.ip_type || '', r.exit_ip || '',
+      r.target_ok == null ? '' : (r.target_ok ? 'pass' : 'blocked')].map(csvCell).join(','));
+    return head + '\n' + lines.join('\n') + '\n';
+  }
+  function escPdf(s){ return String(s).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)').replace(/[^\x20-\x7E]/g, ''); }
+  function makePdfBytes(){
+    const w = allResults.filter(r => r.alive);
+    const fast = w.reduce((m, r) => (r.latency_ms != null && (m == null || r.latency_ms < m)) ? r.latency_ms : m, null);
+    const summary = 'Checked ' + allResults.length + '  ·  Working ' + w.length +
+      '  ·  Elite ' + w.filter(r => r.anonymity === 'elite').length +
+      '  ·  Residential ' + w.filter(r => r.ip_type === 'residential').length +
+      '  ·  Fastest ' + (fast == null ? '-' : fast + ' ms');
+    const when = new Date().toLocaleString();
+    const per = 42, pageCount = Math.max(1, Math.ceil(allResults.length / per));
+    const contents = [];
+    for(let p = 0; p < pageCount; p++){
+      let c = '0.04 0.10 0.07 rg 0 792 595 50 re f\n';
+      c += 'BT /F3 15 Tf 0.93 0.98 0.95 rg 36 812 Td (NETWORK DIAGNOSTICS) Tj ET\n';
+      c += 'BT /F1 8.5 Tf 0.65 0.75 0.68 rg 36 798 Td (Free Proxy Checker - Report  ·  Generated ' + escPdf(when) + ') Tj ET\n';
+      c += 'BT /F1 9.5 Tf 0.10 0.13 0.11 rg 36 770 Td (' + escPdf(summary) + ') Tj ET\n';
+      c += 'BT /F3 8 Tf 0.35 0.42 0.37 rg 36 744 Td (PROXY) Tj 232 0 Td (PROTO) Tj 44 0 Td (STATUS) Tj 46 0 Td (MS) Tj 38 0 Td (ANONYMITY) Tj 62 0 Td (NETWORK) Tj 66 0 Td (TARGET) Tj ET\n';
+      c += '0.80 0.85 0.82 RG 0.6 w 36 736 m 559 736 l S\n';
+      let y = 722;
+      for(const r of allResults.slice(p * per, (p + 1) * per)){
+        const row = escPdf((r.protocol ? r.protocol + '://' : '') + r.proxy).slice(0, 38);
+        c += 'BT /F2 8 Tf 0.10 0.13 0.11 rg 36 ' + y + ' Td (' + row + ') Tj ET';
+        c += 'BT /F1 8 Tf 36 ' + y + ' Td 232 0 Td (' + escPdf(r.protocol || '-') + ') Tj 44 0 Td (' + (r.alive ? 'working' : 'dead') + ') Tj 46 0 Td (' +
+             (r.latency_ms ?? '-') + ') Tj 38 0 Td (' + escPdf(r.anonymity || '-') + ') Tj 62 0 Td (' + escPdf(r.ip_type || '-') + ') Tj 66 0 Td (' +
+             (r.target_ok == null ? '-' : (r.target_ok ? 'pass' : 'blocked')) + ') Tj ET\n';
+        y -= 13.5;
+      }
+      c += 'BT /F1 8 Tf 0.45 0.52 0.47 rg 36 30 Td (Page ' + (p + 1) + ' of ' + pageCount + '  ·  Network Diagnostics - free & open source (MIT)  ·  Your data never leaves your device.) Tj ET';
+      contents.push(c);
+    }
+    // Assemble: 1 catalog, 2 pages, 3-5 fonts, then content/page pairs.
+    const objs = [];
+    objs[1] = '<< /Type /Catalog /Pages 2 0 R >>';
+    const kids = contents.map((_, i) => (6 + i * 2 + 1) + ' 0 R').join(' ');
+    objs[2] = '<< /Type /Pages /Kids [' + kids + '] /Count ' + contents.length + ' >>';
+    objs[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+    objs[4] = '<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>';
+    objs[5] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>';
+    contents.forEach((c, i) => {
+      const cid = 6 + i * 2, pid = cid + 1;
+      objs[cid] = '<< /Length ' + c.length + ' >>\nstream\n' + c + '\nendstream';
+      objs[pid] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents ' + cid + ' 0 R >>';
+    });
+    let out = '%PDF-1.4\n';
+    const offsets = [0];
+    for(let i = 1; i < objs.length; i++){ offsets[i] = out.length; out += i + ' 0 obj\n' + objs[i] + '\nendobj\n'; }
+    const xref = out.length;
+    out += 'xref\n0 ' + objs.length + '\n0000000000 65535 f \n';
+    for(let i = 1; i < objs.length; i++) out += String(offsets[i]).padStart(10, '0') + ' 00000 n \n';
+    out += 'trailer\n<< /Size ' + objs.length + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF';
+    return new TextEncoder().encode(out);
+  }
+  $('dlTxt').addEventListener('click', () => { if(!needResults()) saveFile('working-proxies.txt', allResults.filter(r => r.alive).map(lineText).join('\n') + '\n'); });
+  $('dlAll').addEventListener('click', () => { if(!needResults()) saveFile('all-checked.txt', allResults.map(lineText).join('\n') + '\n'); });
+  $('dlRes').addEventListener('click', () => { if(!needResults()) saveFile('residential.txt', allResults.filter(r => r.alive && r.ip_type === 'residential').map(lineText).join('\n') + '\n'); });
+  $('dlDc').addEventListener('click', () => { if(!needResults()) saveFile('datacenter.txt', allResults.filter(r => r.alive && r.ip_type === 'datacenter').map(lineText).join('\n') + '\n'); });
+  $('dlCsv').addEventListener('click', () => { if(!needResults()) saveFile('nd-results.csv', toCsv()); });
+  $('dlPdf').addEventListener('click', () => { if(!needResults()) saveFile('nd-report.pdf', null, makePdfBytes()); });
+  $('dlJson').addEventListener('click', () => { if(!needResults()) saveFile('nd-report.json', JSON.stringify(allResults, null, 2)); });
+  $('copyWorking').addEventListener('click', () => { if(!needResults()){ navigator.clipboard.writeText(allResults.filter(r => r.alive).map(lineText).join('\n')); toast('📋 Working proxies copied.'); } });
+  $('copyAll').addEventListener('click', () => { if(!needResults()){ navigator.clipboard.writeText(allResults.map(lineText).join('\n')); toast('📋 All checked proxies copied.'); } });
+  $('dlTop').addEventListener('click', () => {
+    if(needResults()) return;
+    const top = allResults.filter(r => r.alive).sort((a, b) => (a.latency_ms ?? 1e9) - (b.latency_ms ?? 1e9)).slice(0, 50);
+    saveFile('top-50-fastest.txt', top.map(lineText).join('\n') + '\n');
   });
-  $('dlTxt').addEventListener('click', () => download('working-proxies.txt', allResults.filter(r => r.alive).map(lineText).join('\n') + '\n'));
-  $('dlRes').addEventListener('click', () => download('residential.txt', allResults.filter(r => r.alive && r.ip_type === 'residential').map(lineText).join('\n') + '\n'));
-  $('dlDc').addEventListener('click', () => download('datacenter.txt', allResults.filter(r => r.alive && r.ip_type === 'datacenter').map(lineText).join('\n') + '\n'));
-  $('dlJson').addEventListener('click', () => download('nd-results.json', JSON.stringify(allResults, null, 2)));
+  $('dlFav').addEventListener('click', () => {
+    const fav = allResults.filter(r => favs.has(r.proxy));
+    if(!fav.length){ setStatus('No favorites in the current results — tap ☆ on a proxy row to star it.', true); return; }
+    saveFile('favorites.txt', fav.map(lineText).join('\n') + '\n');
+  });
+  $('shareWorking').addEventListener('click', async () => {
+    if(needResults()) return;
+    const text = allResults.filter(r => r.alive).map(lineText).join('\n');
+    if(navigator.share){
+      try{ await navigator.share({ title: 'Working proxies — Network Diagnostics', text }); return; }
+      catch(e){ if(e && e.name === 'AbortError') return; }
+    }
+    navigator.clipboard.writeText(text);
+    toast('📋 Sharing is not available here — working proxies copied instead.');
+  });
+
+  /* ---------- import from URL ---------- */
+  $('urlLoad').addEventListener('click', async () => {
+    const url = $('urlInput').value.trim();
+    if(!url){ setStatus('Paste a list URL first.', true); return; }
+    if(!tauri){ setStatus('Demo mode — URL import works inside the installed app.'); return; }
+    $('urlLoad').disabled = true; setStatus('🔗 Loading ' + url + ' …');
+    try{
+      const text = await tauri.invoke('fetch_url_text', { url });
+      $('list').value = text; updateLineCount();
+      const n = text.split('\n').filter(l => l.trim()).length;
+      toast('🔗 Imported ' + n.toLocaleString() + ' lines from URL');
+      setStatus('🔗 Imported ' + n.toLocaleString() + ' lines. Press ✅ Check proxies.');
+    }catch(e){ setStatus('Import failed: ' + e, true); }
+    $('urlLoad').disabled = false;
+  });
+
+  /* ---------- keep-alive: quietly re-check the working set ---------- */
+  let keepTimer = null;
+  function armKeepAlive(){
+    clearInterval(keepTimer); keepTimer = null;
+    if(!$('keepAlive').checked) return;
+    const mins = parseInt($('keepEvery').value, 10) || 15;
+    keepTimer = setInterval(async () => {
+      if(isBusy) return;
+      const working = allResults.filter(r => r.alive).map(lineText);
+      if(!working.length){
+        if($('keepRefetch').checked && tauri) $('heroFetch').click();
+        return;
+      }
+      setStatus('♻️ Keep-alive: re-checking ' + working.length.toLocaleString() + ' working proxies…');
+      await runChecks(working.slice(0, CHECK_CAP));
+    }, mins * 60 * 1000);
+  }
+  $('keepAlive').addEventListener('change', armKeepAlive);
+  $('keepEvery').addEventListener('change', armKeepAlive);
   updateLineCount();
 </script>
 </body>

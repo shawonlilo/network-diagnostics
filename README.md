@@ -172,6 +172,14 @@ Direction and tokens live in [DESIGN.md](DESIGN.md). Every build is gated in CI 
 
 The built-in catalog — TheSpeedX, monosans, ProxyScrape, stormsia, HProxy, proxifly, jetkai, databay, iplocate, roosterkid, clarketm, hookzof, proxmint, relayglass, hideip.me, vakhov, mmpx12, Zaeem20 — is documented with refresh rates and license notes in [SOURCES.md](SOURCES.md). Full credits below 👇
 
+
+### 🆕 In v0.5.0 — the enterprise dashboard + power tools
+- 👑 **New brand & logo** — crown + diagnostics-pulse identity, proper icons on every platform.
+- 📂 **Upload your own list** — file picker or drag & drop (.txt / .csv), plus paste.
+- 📄 **Real exports that save on every platform** — `working.txt`, `all-checked.txt`, `residential.txt`, `datacenter.txt`, **results.csv** (Excel/Sheets), **report.pdf** (print-ready), `report.json`. Files are written natively to your Downloads folder — they work on Android too, where browser-style downloads silently fail.
+- 🔎 **Search & filter** the results table live; target-site presets (YouTube / Google / gab.com).
+- ⭐ **Favorites vault** (persists on-device), 📈 speed-trend vs last run, 🔗 import-from-URL, 🏆 Top-50-fastest pack, 🌍 working-by-country summary, ♻️ keep-alive re-checks, 📤 share sheet.
+
 ## 🙏 Thanks & credits
 
 **This project stands on the shoulders of the free-proxy community.** 💚 Every source below is fetched at runtime from its publisher — we host nothing of theirs — and we are deeply grateful to each maintainer who keeps these lists alive for everyone, for free. **Thank you!** 🙌

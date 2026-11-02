@@ -4,6 +4,34 @@ All notable changes to Network Diagnostics, version by version.
 This project follows [Semantic Versioning](https://semver.org) and a
 "born beta" workflow: early public versions, honest changelogs.
 
+## [0.5.0] — 2026-11-02 — The enterprise dashboard 👑 + power tools
+
+- **Brand & logo.** A real identity — crown over a diagnostics pulse
+  with network nodes — as proper icon sets for Windows (ICO),
+  macOS (ICNS), Linux and Android (adaptive mipmaps), and a branded
+  header bar in the app.
+- **Upload your own list.** File picker + drag & drop (.txt/.csv)
+  next to paste, with instant line counts.
+- **Exports that actually save — on every platform.** New: CSV for
+  Excel/Sheets, a print-ready PDF report, and all-checked.txt.
+  Files are written natively to the Downloads folder via a new
+  `save_export` command, because browser-style blob downloads
+  silently do nothing inside Android's WebView — the old buttons
+  looked fine and saved nothing on phones.
+- **Friendlier dashboard.** Numbered 3-step flow (Get → Results →
+  Export), live search over results, target-site preset chips
+  (YouTube / Google / gab.com), toast confirmations for every save
+  and copy, and a friendlier empty state.
+
+- **Power tools, kept simple** (owner-picked from the roadmap):
+  ⭐ favorites that persist on-device (star any row, filter, export),
+  📈 speed-trend arrows vs your last run (no charts to learn),
+  🔗 import a list straight from a URL, 🏆 one-click Top-50-fastest
+  pack, 🌍 working-by-country summary (country was already in the
+  engine — now surfaced), ♻️ keep-alive that quietly re-checks the
+  working set on a timer (optional auto-refetch), and 📤 share-working
+  with copy fallback.
+
 ## [0.3.2] — 2026-11-02 — Android actually works now 📱
 
 - **The Fetch button was dead on Android — fixed at the root.**
