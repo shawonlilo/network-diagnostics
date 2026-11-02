@@ -1454,38 +1454,96 @@ pub fn merge_source_text(text: &str, protocol_label: &str) -> Vec<ProxyEndpoint>
 
 /// Fetch every file of every source, merge and de-duplicate
 /// (the same proxy appears in many lists — dedupe is half the value).
+/// GitHub raw URLs get a jsDelivr CDN mirror retry: some carriers and
+/// ISPs block or throttle raw.githubusercontent.com while the same file
+/// sails through the CDN. `.../<user>/<repo>/<branch>/<path>` maps to
+/// `cdn.jsdelivr.net/gh/<user>/<repo>@<branch>/<path>`.
+fn mirror_url(url: &str) -> Option<String> {
+    let rest = url.strip_prefix("https://raw.githubusercontent.com/")?;
+    let parts: Vec<&str> = rest.splitn(4, '/').collect();
+    if parts.len() == 4 {
+        Some(format!(
+            "https://cdn.jsdelivr.net/gh/{}/{}@{}/{}",
+            parts[0], parts[1], parts[2], parts[3]
+        ))
+    } else {
+        None
+    }
+}
+
+/// Fetch all source files **in parallel** (12 workers). The old
+/// one-by-one fetch could take minutes on mobile data — the button
+/// looked dead. Each file: primary URL, then the jsDelivr mirror for
+/// GitHub-hosted lists.
 pub fn fetch_sources(
     defs: &[SourceDef],
     timeout: Duration,
 ) -> (Vec<ProxyEndpoint>, Vec<SourceReport>) {
-    let mut merged: Vec<ProxyEndpoint> = Vec::new();
-    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
-    let mut reports = Vec::new();
+    // Flatten to a job list.
+    let mut jobs: Vec<(String, String, String)> = Vec::new(); // (source, label, url)
     for def in defs {
         for (label, url) in def.files {
+            jobs.push((def.name.to_string(), label.to_string(), url.to_string()));
+        }
+    }
+    let total = jobs.len();
+    let jobs = std::sync::Arc::new(jobs);
+    let next = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let (tx, rx) = std::sync::mpsc::channel::<(SourceReport, Vec<ProxyEndpoint>)>();
+    let workers = 12.min(total.max(1));
+    let mut handles = Vec::new();
+    for _ in 0..workers {
+        let jobs = jobs.clone();
+        let next = next.clone();
+        let tx = tx.clone();
+        handles.push(std::thread::spawn(move || loop {
+            let i = next.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            if i >= jobs.len() {
+                break;
+            }
+            let (source, label, url) = &jobs[i];
             let mut report = SourceReport {
-                source: def.name.to_string(),
-                url: url.to_string(),
+                source: source.clone(),
+                url: url.clone(),
                 lines: 0,
                 parsed: 0,
                 error: None,
             };
-            match fetch_url(url, timeout) {
+            let fetched = fetch_url(url, timeout).or_else(|first_err| {
+                // One retry via the CDN mirror for GitHub-hosted files.
+                match mirror_url(url) {
+                    Some(m) => fetch_url(&m, timeout)
+                        .map_err(|e| format!("{first_err} | mirror: {e}")),
+                    None => Err(first_err),
+                }
+            });
+            let mut eps = Vec::new();
+            match fetched {
                 Ok(text) => {
                     report.lines = text.lines().count();
-                    let eps = merge_source_text(&text, label);
+                    eps = merge_source_text(&text, label);
                     report.parsed = eps.len();
-                    for ep in eps {
-                        let key = format!("{}|{:?}", ep.authority(), ep.protocol);
-                        if seen.insert(key) {
-                            merged.push(ep);
-                        }
-                    }
                 }
                 Err(e) => report.error = Some(e),
             }
-            reports.push(report);
+            let _ = tx.send((report, eps));
+        }));
+    }
+    drop(tx);
+    let mut merged: Vec<ProxyEndpoint> = Vec::new();
+    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut reports = Vec::new();
+    for (report, eps) in rx {
+        for ep in eps {
+            let key = format!("{}|{:?}", ep.authority(), ep.protocol);
+            if seen.insert(key) {
+                merged.push(ep);
+            }
         }
+        reports.push(report);
+    }
+    for h in handles {
+        let _ = h.join();
     }
     (merged, reports)
 }

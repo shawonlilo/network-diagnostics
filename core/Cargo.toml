@@ -1,6 +1,6 @@
 [package]
 name = "nd-core"
-version = "0.5.1"
+version = "0.5.2"
 edition = "2021"
 license = "MIT"
 description = "Network Diagnostics core engine: proxy checking (HTTP/SOCKS4/SOCKS5), anonymity grading, target-site tests, and domain health (DNS/MX/SPF/DMARC). Checking is pure std; source fetching uses ureq + rustls so it works on Android too."

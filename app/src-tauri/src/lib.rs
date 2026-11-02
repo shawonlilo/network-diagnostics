@@ -39,7 +39,7 @@ async fn check_proxies(list_text: String, target: Option<String>) -> Result<Stri
 #[tauri::command]
 async fn fetch_sources() -> Result<String, String> {
     let (merged, reports) = tauri::async_runtime::spawn_blocking(move || {
-        nd_core::fetch_sources(&default_sources(), Duration::from_secs(20))
+        nd_core::fetch_sources(&default_sources(), Duration::from_secs(12))
     })
     .await
     .map_err(|e| e.to_string())?;

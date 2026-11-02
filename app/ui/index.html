@@ -210,7 +210,7 @@
       <p class="tagline">Enterprise-grade <b>free proxy checker</b> — speed, anonymity &amp; network type, tested on your own device.</p>
     </div>
     <div class="spacer"></div>
-    <span class="pill gold">v0.5.1</span>
+    <span class="pill gold">v0.5.2</span>
     <span class="pill"><span class="dot"></span> 100% local · nothing uploaded</span>
   </div>
 
@@ -545,19 +545,30 @@
   $('heroFetch').addEventListener('click', async () => {
     if(!tauri){ setStatus('Demo mode — fetching works inside the installed app.'); return; }
     $('heroFetch').disabled = true;
-    setStatus('📚 Fetching 18 free sources…');
+    const startedAt = Date.now();
+    setStatus('📚 Fetching 18 free sources… 0s');
+    const tick = setInterval(() => setStatus('📚 Fetching 18 free sources… ' + Math.round((Date.now() - startedAt) / 1000) + 's (working — slow sources can take a while)'), 1000);
     try{
       const data = JSON.parse(await tauri.invoke('fetch_sources'));
+      clearInterval(tick);
       $('list').value = data.candidates; updateLineCount();
       $('stFetched').textContent = data.total.toLocaleString();
-      const failed = data.reports.filter(r => r.error).length;
-      setStatus('Fetched ' + data.total.toLocaleString() + ' unique proxies' + (failed ? ' (' + failed + ' source files failed)' : '') + ($('autoCheck').checked ? ' — checking now…' : '. Press ✅ Check proxies.'));
-      if($('autoCheck').checked){
-        let lines = data.candidates.split('\n').map(l => l.trim()).filter(Boolean);
-        if(lines.length > CHECK_CAP) lines = lines.slice(0, CHECK_CAP);
-        await runChecks(lines);
+      const failed = data.reports.filter(r => r.error);
+      if(!data.total){
+        const firstErr = failed.length ? failed[0].error : 'unknown error';
+        setStatus('❌ Fetch returned 0 proxies — every source failed. First error: ' + firstErr + ' · Check your internet connection and try again.', true);
+        toast('❌ Fetch failed — see the red message for the reason');
+      } else {
+        setStatus('Fetched ' + data.total.toLocaleString() + ' unique proxies in ' + Math.round((Date.now() - startedAt) / 1000) + 's' +
+          (failed.length ? ' (' + failed.length + ' source files failed)' : '') + ($('autoCheck').checked ? ' — checking now…' : '. Press ✅ Check proxies.'));
+        if($('autoCheck').checked){
+          let lines = data.candidates.split('\n').map(l => l.trim()).filter(Boolean);
+          if(lines.length > CHECK_CAP) lines = lines.slice(0, CHECK_CAP);
+          await runChecks(lines);
+        }
       }
     }catch(e){
+      clearInterval(tick);
       setStatus('Fetch failed: ' + e, true);
     }
     $('heroFetch').disabled = false;

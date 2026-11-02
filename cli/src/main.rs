@@ -177,7 +177,7 @@ fn cmd_fetch(args: &[String]) -> i32 {
         defs.len(),
         defs.iter().map(|d| d.files.len()).sum::<usize>()
     );
-    let (merged, reports) = fetch_sources(&defs, Duration::from_secs(20));
+    let (merged, reports) = fetch_sources(&defs, Duration::from_secs(12));
     let mut ok_files = 0;
     for r in &reports {
         match &r.error {

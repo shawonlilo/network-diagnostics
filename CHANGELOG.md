@@ -4,6 +4,19 @@ All notable changes to Network Diagnostics, version by version.
 This project follows [Semantic Versioning](https://semver.org) and a
 "born beta" workflow: early public versions, honest changelogs.
 
+## [0.5.2] — 2026-11-02 — Fetch reliability
+
+- **Parallel source fetching.** The 52 source files were fetched one
+  by one — up to minutes on mobile data, with the button looking
+  dead. Now 12 at a time (verified: full fetch in ~14 s on a fast
+  link, 52/52 files, ~67,600 proxies).
+- **CDN mirror retry.** GitHub-hosted lists automatically retry via
+  the jsDelivr CDN mirror when the primary host fails or is blocked
+  by a carrier/ISP.
+- **The fetch now talks.** Live elapsed timer while fetching, and if
+  a fetch returns nothing, the app shows the first real error instead
+  of a silent zero.
+
 ## [0.5.1] — 2026-11-02 — Icon format fix
 
 - The v0.5.0 icon set was saved as RGB PNGs; Tauri's build requires
