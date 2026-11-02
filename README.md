@@ -40,7 +40,7 @@ Download the current beta from the Releases page:
 | Linux | `.AppImage` |
 | Debian / Ubuntu | `.deb` |
 | Android | `.apk` (beta) |
-| iOS | Companion mode (beta): UI connects to checks running on your own desktop/VPS |
+| iOS | Planned: companion mode (UI connects to checks on your own desktop/VPS) — not yet released |
 | Docker / server | `docker run` image with the `nd-check` CLI (below) |
 
 These installers are produced by the GitHub Actions release workflow in
@@ -120,7 +120,7 @@ paste list ─► parse + dedupe ─► nd-core checks (50 parallel)
                                   │    → alive? latency? exit IP?
                                   │    → anonymity from judge-echoed headers
                                   ├─ optional target test (your site, via CONNECT or GET)
-                                  └─ optional GeoIP enrichment (off by default)
+                                  └─ optional GeoIP enrichment (app: on by default; CLI: --geo)
                              ─► sorted table ─► copy / .txt / .json
 ```
 
