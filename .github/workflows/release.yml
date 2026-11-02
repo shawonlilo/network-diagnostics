@@ -52,6 +52,8 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_name }}
+          name: Network Diagnostics ${{ github.ref_name }}
           files: |
             target/release/nd-check
             target/release/nd-check.exe
