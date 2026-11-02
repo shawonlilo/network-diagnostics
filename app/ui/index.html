@@ -210,7 +210,7 @@
       <p class="tagline">Enterprise-grade <b>free proxy checker</b> — speed, anonymity &amp; network type, tested on your own device.</p>
     </div>
     <div class="spacer"></div>
-    <span class="pill gold">v0.6.0</span>
+    <span class="pill gold">v0.6.1</span>
     <span class="pill"><span class="dot"></span> 100% local · nothing uploaded</span>
   </div>
 
@@ -334,7 +334,12 @@
 
 <script>
   const $ = id => document.getElementById(id);
-  const tauri = window.__TAURI__ && window.__TAURI__.core;
+  /* Tauri bridge: prefer the __TAURI__ global (needs withGlobalTauri in
+     tauri.conf.json), fall back to the always-injected Tauri 2 internals.
+     Demo mode only when neither exists (a real plain browser). */
+  const __invoke = (window.__TAURI__ && window.__TAURI__.core && window.__TAURI__.core.invoke)
+    || (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.invoke);
+  const tauri = __invoke ? { invoke: (cmd, args) => __invoke(cmd, args) } : null;
   const CHECK_CAP = 6000, CHUNK = 200;
   let allResults = [], filter = 'all', query = '', cancelRun = false, runTimer = null, toastTimer = null, isBusy = false, prevLat = {};
   /* Favorites + last-run latencies persist on this device only. */

@@ -4,6 +4,17 @@ All notable changes to Network Diagnostics, version by version.
 This project follows [Semantic Versioning](https://semver.org) and a
 "born beta" workflow: early public versions, honest changelogs.
 
+## [0.6.1] — 2026-11-02 — Demo-mode fix (critical)
+
+- **Fixed: the installed app was stuck in demo mode.** The Tauri
+  bridge was never enabled (`withGlobalTauri` was missing from
+  tauri.conf.json), so Fetch / Check / Domain / URL import / Export
+  did nothing in the installed app and only showed "Demo mode —
+  fetching works inside the installed app." The bridge is now
+  enabled, and the UI also falls back to the always-injected Tauri 2
+  internals, so the native engine is reached on every platform.
+  If v0.6.0 showed you "Demo mode", update to v0.6.1 — fixed.
+
 ## [0.6.0] — 2026-11-02 — Essential Light
 
 - **New default look: V1 Essential Light.** The dashboard moves to the
