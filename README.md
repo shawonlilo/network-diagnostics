@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/shawonlilo/network-diagnostics/releases"><img src="https://img.shields.io/badge/Release-v0.2.1-brightgreen.svg" alt="Release v0.2.1"></a>
+  <a href="https://github.com/shawonlilo/network-diagnostics/releases"><img src="https://img.shields.io/github/v/release/shawonlilo/network-diagnostics?include_prereleases&label=Release&color=brightgreen" alt="Release v0.2.1"></a>
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT">
   <img src="https://img.shields.io/badge/Platforms-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Debian%20%7C%20Android-blue.svg" alt="Platforms: Windows | macOS | Linux | Debian | Android">
   <img src="https://img.shields.io/badge/Free%20proxy%20sources-18-orange.svg" alt="18 free proxy sources">

@@ -1367,7 +1367,7 @@ pub fn default_sources() -> Vec<SourceDef> {
 /// Linux. Checking itself never uses curl; it speaks raw proxy protocols.
 pub fn fetch_url(url: &str, timeout: Duration) -> Result<String, String> {
     let secs = timeout.as_secs().max(5).to_string();
-    let output = std::process::Command::new("curl")
+    let output = match std::process::Command::new("curl")
         .args([
             "-fsSL",
             "--max-time",
@@ -1377,7 +1377,26 @@ pub fn fetch_url(url: &str, timeout: Duration) -> Result<String, String> {
             url,
         ])
         .output()
-        .map_err(|e| format!("curl unavailable: {e}"))?;
+    {
+        Ok(o) => o,
+        Err(curl_err) => {
+            // Windows machines without curl.exe on PATH: fall back to
+            // PowerShell's Invoke-WebRequest (present on every Windows 10+).
+            let script = format!(
+                "$ProgressPreference='SilentlyContinue';(Invoke-WebRequest -UseBasicParsing -Uri '{}' -TimeoutSec {}).Content",
+                url.replace('\'', "''"),
+                secs
+            );
+            let ps = std::process::Command::new("powershell")
+                .args(["-NoProfile", "-NonInteractive", "-Command", &script])
+                .output()
+                .map_err(|_| format!("curl unavailable: {curl_err}"))?;
+            if !ps.status.success() {
+                return Err("fetch failed (powershell fallback)".to_string());
+            }
+            return Ok(String::from_utf8_lossy(&ps.stdout).to_string());
+        }
+    };
     if !output.status.success() {
         return Err(format!(
             "fetch failed ({})",

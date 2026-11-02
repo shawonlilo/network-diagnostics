@@ -54,15 +54,21 @@ jobs:
           path: |
             target/release/nd-check
             target/release/nd-check.exe
+      - name: Name the binary per-platform (avoids Linux/macOS name collision)
+        shell: bash
+        run: |
+          if [ -f target/release/nd-check.exe ]; then
+            cp target/release/nd-check.exe "${{ matrix.artifact }}.exe"
+          else
+            cp target/release/nd-check "${{ matrix.artifact }}"
+          fi
       - name: Attach the CLI binary to the GitHub release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: Network Diagnostics ${{ github.ref_name }}
-          files: |
-            target/release/nd-check
-            target/release/nd-check.exe
+          files: ${{ matrix.artifact }}*
           fail_on_unmatched_files: false
 
   desktop:

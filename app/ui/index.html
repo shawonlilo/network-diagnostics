@@ -3,152 +3,423 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Network Diagnostics</title>
+<title>Network Diagnostics — Free Proxy Checker</title>
 <style>
-  :root{--bg:#0e1116;--surface:#161b22;--border:#2a3140;--text:#e8ecf1;--muted:#8b94a3;--accent:#3fb950;--warn:#d29922;--danger:#f85149}
+  :root{
+    --bg:#070a08; --bg2:#0b100c; --panel:rgba(20,28,22,.82); --panel2:rgba(14,20,16,.92);
+    --line:#223528; --line2:#2e4a38; --text:#eaf5ee; --muted:#93a89b; --faint:#5f7267;
+    --green:#34d399; --green2:#3fb950; --gold:#e3b341; --blue:#58a6ff; --amber:#d29922; --red:#f85149;
+    --radius:16px;
+  }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-  main{max-width:880px;margin:0 auto;padding:24px 16px 48px}
-  h1{font-size:20px;margin:0 0 4px}
-  p.sub{color:var(--muted);margin:0 0 20px}
-  textarea{width:100%;min-height:180px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:12px;font-family:ui-monospace,Consolas,monospace;font-size:13px}
-  label{display:block;margin:14px 0 6px;color:var(--muted);font-size:13px}
-  input[type=text]{width:100%;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
-  button{background:var(--accent);color:#06130a;border:0;border-radius:10px;padding:12px 20px;font-weight:600;cursor:pointer;margin-top:16px}
-  button.secondary{background:var(--surface);color:var(--text);border:1px solid var(--border);margin-right:8px}
-  button:disabled{opacity:.5;cursor:wait}
-  table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13.5px}
-  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
-  th{color:var(--muted);font-weight:500}
-  td.mono{font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
-  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px}
-  .ok{background:var(--accent)} .caveat{background:var(--warn)} .dead{background:var(--danger)} .idle{background:var(--muted)}
-  .note{color:var(--muted);font-size:13px;margin-top:14px}
-  #status{margin-top:14px;color:var(--muted)}
-  .hidden{display:none}
+  html,body{height:100%}
+  body{
+    margin:0;color:var(--text);
+    font:15px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",sans-serif;
+    background:
+      radial-gradient(1100px 500px at 85% -10%, rgba(52,211,153,.13), transparent 60%),
+      radial-gradient(900px 480px at -10% 110%, rgba(227,179,65,.07), transparent 55%),
+      linear-gradient(180deg,var(--bg2),var(--bg));
+    background-attachment:fixed;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;opacity:.35;
+    background-image:linear-gradient(rgba(52,211,153,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(52,211,153,.05) 1px,transparent 1px);
+    background-size:44px 44px;
+    mask-image:radial-gradient(ellipse at 50% 0%,black 30%,transparent 75%);
+  }
+  .wrap{max-width:1240px;margin:0 auto;padding:26px 20px 56px;position:relative}
+  /* ---------- header ---------- */
+  header{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .logo{
+    width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-size:28px;
+    background:linear-gradient(145deg,#123324,#0a1a12);border:1px solid var(--line2);
+    box-shadow:0 0 0 1px rgba(52,211,153,.12),0 10px 30px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  h1{font-size:25px;margin:0;letter-spacing:.2px}
+  h1 .crown{color:var(--gold)}
+  .tagline{color:var(--muted);margin:2px 0 0;font-size:14px}
+  .tagline b{color:var(--green);font-weight:600}
+  .spacer{flex:1}
+  .pill{
+    display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;
+    background:var(--panel);border:1px solid var(--line);color:var(--muted);font-size:12.5px;font-weight:600;
+  }
+  .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+  /* ---------- layout ---------- */
+  .grid{display:grid;grid-template-columns:380px 1fr;gap:18px;margin-top:22px;align-items:start}
+  @media (max-width:980px){.grid{grid-template-columns:1fr}}
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px;backdrop-filter:blur(8px);
+    box-shadow:0 14px 34px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:1.4px;color:var(--faint);margin:0 0 12px;font-weight:700}
+  .sticky{position:sticky;top:18px}
+  @media (max-width:980px){.sticky{position:static}}
+  /* ---------- hero action ---------- */
+  .hero-btn{
+    width:100%;border:0;cursor:pointer;border-radius:14px;padding:17px 18px;text-align:left;color:#04160c;
+    background:linear-gradient(135deg,#4be38a,#22b573 55%,#149a5c);
+    box-shadow:0 12px 30px rgba(34,181,115,.35),inset 0 1px 0 rgba(255,255,255,.5);
+    display:flex;align-items:center;gap:13px;transition:transform .08s ease,box-shadow .2s ease,opacity .2s;
+  }
+  .hero-btn:hover{transform:translateY(-1px);box-shadow:0 16px 36px rgba(34,181,115,.45),inset 0 1px 0 rgba(255,255,255,.5)}
+  .hero-btn:disabled{opacity:.55;cursor:wait;transform:none}
+  .hero-btn .big{font-size:18.5px;font-weight:800;letter-spacing:.2px;display:block}
+  .hero-btn .small{font-size:12.5px;font-weight:600;opacity:.75;display:block;margin-top:1px}
+  .hero-btn .icon{font-size:27px}
+  .or{display:flex;align-items:center;gap:10px;color:var(--faint);font-size:12px;margin:16px 0 4px;text-transform:uppercase;letter-spacing:1.2px}
+  .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+  label{display:block;margin:13px 0 6px;color:var(--muted);font-size:13px;font-weight:600}
+  textarea,input[type=text]{
+    width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:12px;
+    padding:11px 12px;font:inherit;font-size:13.5px;outline:none;transition:border-color .15s, box-shadow .15s;
+  }
+  textarea{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;min-height:118px;resize:vertical}
+  textarea:focus,input[type=text]:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(52,211,153,.18)}
+  .rowline{display:flex;align-items:center;gap:9px}
+  .count{color:var(--faint);font-size:12px;margin-left:auto;font-variant-numeric:tabular-nums}
+  .check-btn{
+    width:100%;margin-top:14px;border:1px solid var(--line2);cursor:pointer;border-radius:12px;padding:13px;
+    background:linear-gradient(180deg,#1d2f24,#152219);color:var(--text);font-weight:700;font-size:15px;
+    transition:border-color .15s, transform .08s;
+  }
+  .check-btn:hover{border-color:var(--green)}
+  .check-btn:disabled{opacity:.5;cursor:wait}
+  .stop-btn{background:linear-gradient(180deg,#3a1d1d,#2a1414);border-color:#5a2b2b}
+  .switch{display:flex;align-items:center;gap:9px;margin-top:13px;color:var(--muted);font-size:13px;cursor:pointer;user-select:none}
+  .switch input{accent-color:var(--green2);width:16px;height:16px;cursor:pointer}
+  .note{color:var(--faint);font-size:12.5px;line-height:1.5}
+  /* ---------- stats ---------- */
+  .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
+  @media (max-width:980px){.stats{grid-template-columns:repeat(3,1fr)}}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 13px}
+  .stat .num{font-size:21px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+  .stat .lbl{color:var(--faint);font-size:11.5px;text-transform:uppercase;letter-spacing:.8px;margin-top:3px;font-weight:700}
+  .stat.hot .num{color:var(--green)} .stat.gold .num{color:var(--gold)}
+  /* ---------- progress ---------- */
+  .progress-wrap{display:none;margin:0 0 14px}
+  .progress-wrap.on{display:block}
+  .pbar{height:10px;border-radius:99px;background:#12241a;border:1px solid var(--line);overflow:hidden}
+  .pfill{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#22b573,#4be38a);box-shadow:0 0 14px rgba(75,227,138,.55);transition:width .3s ease}
+  .pmeta{display:flex;justify-content:space-between;color:var(--muted);font-size:12.5px;margin-top:6px;font-variant-numeric:tabular-nums}
+  /* ---------- results ---------- */
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .chip{
+    border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:999px;
+    padding:7px 13px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;
+  }
+  .chip:hover{border-color:var(--line2);color:var(--text)}
+  .chip.on{background:rgba(52,211,153,.14);border-color:var(--green);color:var(--green)}
+  .tablewrap{border:1px solid var(--line);border-radius:14px;overflow:auto;max-height:560px;background:var(--panel2)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:640px}
+  thead th{
+    position:sticky;top:0;background:#0d1710;color:var(--faint);text-align:left;font-size:11.5px;
+    text-transform:uppercase;letter-spacing:.9px;padding:11px 12px;border-bottom:1px solid var(--line);z-index:1;
+  }
+  tbody td{padding:9px 12px;border-bottom:1px solid rgba(34,53,40,.55);vertical-align:middle}
+  tbody tr:hover{background:rgba(52,211,153,.05)}
+  .mono{font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap}
+  .b-ok{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.4)}
+  .b-dead{background:rgba(248,81,73,.12);color:var(--red);border:1px solid rgba(248,81,73,.35)}
+  .b-elite{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.4)}
+  .b-anon{background:rgba(88,166,255,.13);color:var(--blue);border:1px solid rgba(88,166,255,.35)}
+  .b-trans{background:rgba(210,153,34,.14);color:var(--amber);border:1px solid rgba(210,153,34,.4)}
+  .b-res{background:rgba(227,179,65,.13);color:var(--gold);border:1px solid rgba(227,179,65,.35)}
+  .b-dc{background:rgba(147,168,155,.12);color:var(--muted);border:1px solid var(--line2)}
+  .speedbar{width:64px;height:6px;border-radius:99px;background:#12241a;display:inline-block;vertical-align:middle;margin-right:7px;overflow:hidden}
+  .speedbar i{display:block;height:100%;background:linear-gradient(90deg,#22b573,#4be38a);border-radius:99px}
+  .empty{padding:44px 20px;text-align:center;color:var(--faint)}
+  .empty .big{font-size:34px;margin-bottom:8px}
+  .exports{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .xbtn{
+    border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:11px;padding:9px 14px;
+    font-size:13px;font-weight:600;cursor:pointer;transition:border-color .15s;
+  }
+  .xbtn:hover{border-color:var(--green)}
+  #status{margin-top:12px;color:var(--muted);font-size:13.5px;min-height:20px}
+  #status.err{color:var(--red)}
+  .domain-out{margin-top:10px;font-size:13.5px;color:var(--muted);white-space:pre-wrap;word-break:break-word}
+  footer{margin-top:26px;color:var(--faint);font-size:12.5px;text-align:center}
+  ::-webkit-scrollbar{width:10px;height:10px} ::-webkit-scrollbar-thumb{background:#223528;border-radius:99px} ::-webkit-scrollbar-track{background:transparent}
 </style>
 </head>
 <body>
-<main>
-  <h1>Network Diagnostics</h1>
-  <p class="sub">Paste a proxy list. Get back the ones that work — with speed, anonymity and a test against the site you actually need.</p>
-
-  <label for="list">Your proxy list — one per line (host:port, socks5://…, user:pass@host:port)</label>
-  <textarea id="list" placeholder="203.0.113.10:8080&#10;socks5://198.51.100.7:1080&#10;http://user:pass@192.0.2.55:3128"></textarea>
-
-  <label for="target">Optional — the site you need to reach (target test)</label>
-  <input type="text" id="target" placeholder="https://example.com" />
-
-  <div>
-    <button class="secondary" id="fetch">Fetch fresh list</button>
-    <button id="check">Check proxies</button>
-    <span id="status"></span>
-  </div>
-  <p class="note">Fetch fresh list pulls the built-in catalog of public free proxy lists (18 sources, credited in SOURCES.md) right now, merges them and removes duplicates — expect a few thousand candidates, most of them already dead. Checking is what separates the working few.</p>
-
-  <div id="resultsWrap" class="hidden">
-    <table>
-      <thead><tr><th>Status</th><th>Proxy</th><th>Protocol</th><th>Speed</th><th>Anonymity</th><th>Network</th><th>Exit IP</th><th>Target</th></tr></thead>
-      <tbody id="rows"></tbody>
-    </table>
-    <p class="note"><b>elite</b> = the site cannot tell a proxy is involved · <b>anonymous</b> = it can tell, but cannot see your IP · <b>transparent</b> = it can see your real IP — avoid for private work.</p>
+<div class="wrap">
+  <header>
+    <div class="logo">👑</div>
     <div>
-      <button class="secondary" id="copyWorking">Copy working proxies</button>
-      <button class="secondary" id="dlTxt">Download working .txt</button>
-      <button class="secondary" id="dlJson">Download full report .json</button>
+      <h1>Network Diagnostics <span class="crown">— Free Proxy Checker</span></h1>
+      <p class="tagline">One click gets you <b>fresh free proxies</b> from 18 public sources — checked live on your own machine for speed, anonymity and residential vs datacenter.</p>
+    </div>
+    <div class="spacer"></div>
+    <span class="pill"><span class="dot"></span> 100% local · no uploads · MIT</span>
+  </header>
+
+  <div class="grid">
+    <!-- ======= control panel ======= -->
+    <div class="sticky">
+      <div class="card">
+        <h2>🚀 Get proxies</h2>
+        <button class="hero-btn" id="heroFetch">
+          <span class="icon">⚡</span>
+          <span><span class="big">GET FREE PROXIES</span><span class="small">Fetch 18 sources · 67,000+ proxies · auto-check</span></span>
+        </button>
+        <label class="switch"><input type="checkbox" id="autoCheck" checked /> Auto-check right after fetching</label>
+        <p class="note" style="margin-top:10px">Sources are fetched live from their publishers (TheSpeedX, monosans, ProxyScrape, proxifly and 14 more — full credits in the repo's THANKS.md). Most free proxies are already dead; checking is what finds the working few.</p>
+
+        <div class="or">or paste your own list</div>
+        <label for="list">Proxy list — one per line <span class="count" id="lineCount">0 lines</span></label>
+        <textarea id="list" placeholder="203.0.113.10:8080&#10;socks5://198.51.100.7:1080&#10;http://user:pass@192.0.2.55:3128"></textarea>
+
+        <label for="target">🎯 Target site — the site you actually need to reach (optional)</label>
+        <input type="text" id="target" placeholder="https://example.com" />
+
+        <button class="check-btn" id="check">✅ Check proxies</button>
+        <div id="status"></div>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <h2>🌍 Domain health</h2>
+        <div class="rowline">
+          <input type="text" id="domain" placeholder="example.com" />
+          <button class="xbtn" id="domainBtn" style="white-space:nowrap">Check</button>
+        </div>
+        <div class="domain-out" id="domainOut">A · MX · SPF · DMARC in one pass, in plain words.</div>
+      </div>
+    </div>
+
+    <!-- ======= results ======= -->
+    <div>
+      <div class="stats">
+        <div class="stat"><div class="num" id="stFetched">0</div><div class="lbl">Fetched</div></div>
+        <div class="stat"><div class="num" id="stChecked">0</div><div class="lbl">Checked</div></div>
+        <div class="stat hot"><div class="num" id="stWorking">0</div><div class="lbl">✅ Working</div></div>
+        <div class="stat"><div class="num" id="stElite">0</div><div class="lbl">🥷 Elite</div></div>
+        <div class="stat gold"><div class="num" id="stRes">0</div><div class="lbl">🏠 Residential</div></div>
+        <div class="stat"><div class="num" id="stFast">—</div><div class="lbl">⚡ Fastest</div></div>
+      </div>
+
+      <div class="progress-wrap" id="progressWrap">
+        <div class="pbar"><div class="pfill" id="pfill"></div></div>
+        <div class="pmeta"><span id="ptext">Checking…</span><span id="ptime">0s</span></div>
+      </div>
+
+      <div class="card" style="padding:14px">
+        <div class="filters" id="filters">
+          <button class="chip on" data-f="all">All</button>
+          <button class="chip" data-f="working">✅ Working</button>
+          <button class="chip" data-f="elite">🥷 Elite</button>
+          <button class="chip" data-f="residential">🏠 Residential</button>
+          <button class="chip" data-f="target">🎯 Target pass</button>
+          <button class="chip" data-f="dead">Dead</button>
+        </div>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Status</th><th>Proxy</th><th>Speed</th><th>Anonymity</th><th>Network</th><th>Exit IP</th><th>Target</th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+          <div class="empty" id="emptyState">
+            <div class="big">🛰️</div>
+            Nothing checked yet.<br/>Press <b>⚡ GET FREE PROXIES</b> — or paste a list and hit <b>✅ Check proxies</b>.
+          </div>
+        </div>
+        <div class="exports">
+          <button class="xbtn" id="copyWorking">📋 Copy working</button>
+          <button class="xbtn" id="dlTxt">⬇️ working.txt</button>
+          <button class="xbtn" id="dlRes">🏠 residential.txt</button>
+          <button class="xbtn" id="dlDc">🏢 datacenter.txt</button>
+          <button class="xbtn" id="dlJson">⬇️ Full report .json</button>
+        </div>
+        <p class="note" style="margin-top:12px"><b>🥷 elite</b> = the site cannot tell a proxy is involved · <b>🕵️ anonymous</b> = it can tell, but cannot see your IP · <b>⚠️ transparent</b> = it can see your real IP — avoid for private work. Large lists are checked in batches with live progress; a fetched list is capped at the first 6,000 for checking so a run stays practical.</p>
+      </div>
     </div>
   </div>
-  <p class="note">Your list never leaves this device. Checking runs locally, from your own network — exactly where the proxies will be used. Only test proxies you own or are authorized to test.</p>
-</main>
+
+  <footer>Your list never leaves this device — checking runs locally, from your own network. Only test proxies you own or are authorized to test. 👑 Network Diagnostics · free &amp; open source (MIT)</footer>
+</div>
+
 <script>
   const $ = id => document.getElementById(id);
-  let lastResults = [];
   const tauri = window.__TAURI__ && window.__TAURI__.core;
+  const CHECK_CAP = 6000, CHUNK = 200;
+  let allResults = [], filter = 'all', cancelRun = false, runTimer = null;
 
+  function setStatus(msg, isErr){ const s = $('status'); s.textContent = msg; s.className = isErr ? 'err' : ''; }
   function download(name, text){
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([text], {type:'text/plain'}));
     a.download = name; a.click(); URL.revokeObjectURL(a.href);
   }
-  function dotClass(r){
-    if(!r.alive) return 'dead';
-    if(r.anonymity === 'transparent') return 'caveat';
-    return 'ok';
+  function lineText(r){ return (r.protocol ? r.protocol + '://' : '') + r.proxy; }
+  function updateLineCount(){
+    const n = $('list').value.split('\n').filter(l => l.trim()).length;
+    $('lineCount').textContent = n.toLocaleString() + ' lines';
   }
-  function render(results){
-    lastResults = results;
-    const tb = $('rows'); tb.innerHTML = '';
-    for(const r of results){
-      const tr = document.createElement('tr');
-      const proto = r.protocol ? r.protocol + '://' : '';
-      tr.innerHTML =
-        '<td><span class="dot ' + dotClass(r) + '"></span>' + (r.alive ? 'works' : 'dead') + '</td>' +
-        '<td class="mono">' + proto + r.proxy + '</td>' +
-        '<td>' + (r.protocol || '—') + '</td>' +
-        '<td>' + (r.latency_ms != null ? r.latency_ms + ' ms' : '—') + '</td>' +
-        '<td>' + (r.anonymity || '—') + '</td>' +
-        '<td>' + (r.ip_type || '—') + '</td>' +
-        '<td class="mono">' + (r.exit_ip || '—') + '</td>' +
-        '<td>' + (r.target_ok == null ? '—' : (r.target_ok ? 'passes' : 'blocked')) + '</td>';
-      tb.appendChild(tr);
-    }
-    $('resultsWrap').classList.remove('hidden');
-  }
+  $('list').addEventListener('input', updateLineCount);
 
-  $('fetch').addEventListener('click', async () => {
-    if(!tauri){ $('status').textContent = 'Demo mode — fetching works inside the app.'; return; }
-    $('fetch').disabled = true;
-    $('status').textContent = 'Fetching sources…';
-    try{
-      const data = JSON.parse(await tauri.invoke('fetch_sources'));
-      $('list').value = data.candidates;
-      const failed = data.reports.filter(r => r.error).length;
-      $('status').textContent = 'Fetched ' + data.total.toLocaleString() + ' unique proxies' + (failed ? ' (' + failed + ' files failed)' : '') + '. Now press Check proxies.';
-    }catch(e){
-      $('status').textContent = 'Fetch failed: ' + e;
+  function stats(){
+    const w = allResults.filter(r => r.alive);
+    $('stChecked').textContent = allResults.length.toLocaleString();
+    $('stWorking').textContent = w.length.toLocaleString();
+    $('stElite').textContent = w.filter(r => r.anonymity === 'elite').length.toLocaleString();
+    $('stRes').textContent = w.filter(r => r.ip_type === 'residential').length.toLocaleString();
+    const fast = w.reduce((m, r) => (r.latency_ms != null && (m == null || r.latency_ms < m)) ? r.latency_ms : m, null);
+    $('stFast').textContent = fast == null ? '—' : fast + ' ms';
+  }
+  function passFilter(r){
+    if(filter === 'all') return true;
+    if(filter === 'working') return r.alive;
+    if(filter === 'elite') return r.alive && r.anonymity === 'elite';
+    if(filter === 'residential') return r.alive && r.ip_type === 'residential';
+    if(filter === 'target') return r.alive && r.target_ok === true;
+    if(filter === 'dead') return !r.alive;
+    return true;
+  }
+  function anonBadge(r){
+    if(!r.alive || !r.anonymity) return '—';
+    if(r.anonymity === 'elite') return '<span class="badge b-elite">🥷 elite</span>';
+    if(r.anonymity === 'anonymous') return '<span class="badge b-anon">🕵️ anonymous</span>';
+    return '<span class="badge b-trans">⚠️ transparent</span>';
+  }
+  function netBadge(r){
+    if(!r.alive || !r.ip_type) return '—';
+    return r.ip_type === 'residential' ? '<span class="badge b-res">🏠 residential</span>' : '<span class="badge b-dc">🏢 datacenter</span>';
+  }
+  function render(){
+    const tb = $('rows'); tb.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    let shown = 0;
+    for(const r of allResults){
+      if(!passFilter(r)) continue;
+      shown++;
+      const tr = document.createElement('tr');
+      const pct = r.latency_ms != null ? Math.max(4, 100 - Math.min(96, r.latency_ms / 30)) : 0;
+      tr.innerHTML =
+        '<td>' + (r.alive ? '<span class="badge b-ok">● works</span>' : '<span class="badge b-dead">● dead</span>') + '</td>' +
+        '<td class="mono">' + lineText(r) + '</td>' +
+        '<td>' + (r.latency_ms != null ? '<span class="speedbar"><i style="width:' + pct + '%"></i></span>' + r.latency_ms + ' ms' : '—') + '</td>' +
+        '<td>' + anonBadge(r) + '</td>' +
+        '<td>' + netBadge(r) + '</td>' +
+        '<td class="mono">' + (r.exit_ip || '—') + '</td>' +
+        '<td>' + (r.target_ok == null ? '—' : (r.target_ok ? '🎯 passes' : '🚫 blocked')) + '</td>';
+      frag.appendChild(tr);
     }
-    $('fetch').disabled = false;
+    tb.appendChild(frag);
+    $('emptyState').style.display = allResults.length ? 'none' : 'block';
+    stats();
+  }
+  $('filters').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if(!b) return;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+    b.classList.add('on'); filter = b.dataset.f; render();
   });
 
-  $('check').addEventListener('click', async () => {
-    const text = $('list').value.trim();
-    if(!text){ $('status').textContent = 'Paste at least one proxy first.'; return; }
-    $('check').disabled = true;
-    $('status').textContent = 'Checking…';
+  function setBusy(busy){
+    $('heroFetch').disabled = busy;
+    $('check').disabled = false; // stays clickable: during a run it is the Stop button
+    $('check').textContent = busy ? '⏹ Stop checking' : '✅ Check proxies';
+    $('check').classList.toggle('stop-btn', busy);
+  }
+  function progress(done, total, startedAt){
+    $('progressWrap').classList.add('on');
+    $('pfill').style.width = (total ? Math.round(done / total * 100) : 0) + '%';
+    $('ptext').textContent = 'Checking… ' + done.toLocaleString() + ' / ' + total.toLocaleString();
+    $('ptime').textContent = Math.round((Date.now() - startedAt) / 1000) + 's';
+  }
+
+  async function runChecks(lines){
+    const total = lines.length;
+    const startedAt = Date.now();
+    cancelRun = false; setBusy(true);
+    allResults = []; render(); progress(0, total, startedAt);
+    runTimer = setInterval(() => progress(allResults.length, total, startedAt), 500);
     try{
-      if(tauri){
-        const json = await tauri.invoke('check_proxies', {
-          listText: text,
-          target: $('target').value.trim() || null
-        });
-        const results = JSON.parse(json);
-        const alive = results.filter(r => r.alive).length;
-        $('status').textContent = 'Done — ' + alive + ' of ' + results.length + ' work.';
-        render(results);
-      } else {
-        // Browser demo mode: no engine attached. Show the shape honestly.
-        $('status').textContent = 'Demo mode — open this page inside the desktop/mobile app to run real checks.';
-        render([
-          {proxy:'203.0.113.10:8080', protocol:'http', alive:true, latency_ms:182, anonymity:'elite', exit_ip:'203.0.113.10', target_ok:true},
-          {proxy:'198.51.100.7:1080', protocol:'socks5', alive:true, latency_ms:240, anonymity:'anonymous', exit_ip:'198.51.100.7', target_ok:true},
-          {proxy:'192.0.2.55:3128', protocol:null, alive:false, latency_ms:null, anonymity:null, exit_ip:null, target_ok:null}
-        ]);
+      for(let i = 0; i < lines.length; i += CHUNK){
+        if(cancelRun) break;
+        const chunk = lines.slice(i, i + CHUNK).join('\n');
+        let part;
+        if(tauri){
+          part = JSON.parse(await tauri.invoke('check_proxies', { listText: chunk, target: $('target').value.trim() || null }));
+        } else {
+          await new Promise(r => setTimeout(r, 350));
+          part = [
+            {proxy:'203.0.113.10:8080', protocol:'http', alive:true, latency_ms:182, anonymity:'elite', ip_type:'residential', exit_ip:'203.0.113.10', target_ok:true},
+            {proxy:'198.51.100.7:1080', protocol:'socks5', alive:true, latency_ms:240, anonymity:'anonymous', ip_type:'datacenter', exit_ip:'198.51.100.7', target_ok:true},
+            {proxy:'192.0.2.55:3128', protocol:null, alive:false, latency_ms:null, anonymity:null, ip_type:null, exit_ip:null, target_ok:null}
+          ];
+        }
+        allResults = allResults.concat(part);
+        progress(allResults.length, total, startedAt); render();
+      }
+      // Final: working first, fastest first.
+      allResults.sort((a, b) => (b.alive - a.alive) || ((a.latency_ms ?? 1e9) - (b.latency_ms ?? 1e9)));
+      render();
+      const w = allResults.filter(r => r.alive).length;
+      setStatus(cancelRun ? 'Stopped — ' + w + ' working found so far.' :
+        'Done 🎉 — ' + w.toLocaleString() + ' of ' + allResults.length.toLocaleString() + ' proxies work.');
+    }catch(e){
+      setStatus('Something went wrong: ' + e, true);
+    }
+    clearInterval(runTimer); setBusy(false);
+    setTimeout(() => $('progressWrap').classList.remove('on'), 1200);
+  }
+
+  $('check').addEventListener('click', () => {
+    if($('check').classList.contains('stop-btn') && $('check').textContent.includes('Stop')){ cancelRun = true; return; }
+    let lines = $('list').value.split('\n').map(l => l.trim()).filter(Boolean);
+    if(!lines.length){ setStatus('Paste at least one proxy first — or press GET FREE PROXIES. ⚡', true); return; }
+    if(lines.length > CHECK_CAP){
+      setStatus('Checking the first ' + CHECK_CAP.toLocaleString() + ' of ' + lines.length.toLocaleString() + ' lines (cap for a practical run).');
+      lines = lines.slice(0, CHECK_CAP);
+    }
+    runChecks(lines);
+  });
+
+  $('heroFetch').addEventListener('click', async () => {
+    if(!tauri){ setStatus('Demo mode — fetching works inside the installed app.'); return; }
+    $('heroFetch').disabled = true;
+    setStatus('📚 Fetching 18 free sources…');
+    try{
+      const data = JSON.parse(await tauri.invoke('fetch_sources'));
+      $('list').value = data.candidates; updateLineCount();
+      $('stFetched').textContent = data.total.toLocaleString();
+      const failed = data.reports.filter(r => r.error).length;
+      setStatus('Fetched ' + data.total.toLocaleString() + ' unique proxies' + (failed ? ' (' + failed + ' source files failed)' : '') + ($('autoCheck').checked ? ' — checking now…' : '. Press ✅ Check proxies.'));
+      if($('autoCheck').checked){
+        let lines = data.candidates.split('\n').map(l => l.trim()).filter(Boolean);
+        if(lines.length > CHECK_CAP) lines = lines.slice(0, CHECK_CAP);
+        await runChecks(lines);
       }
     }catch(e){
-      $('status').textContent = 'Something went wrong: ' + e;
+      setStatus('Fetch failed: ' + e, true);
     }
-    $('check').disabled = false;
+    $('heroFetch').disabled = false;
+  });
+
+  $('domainBtn').addEventListener('click', async () => {
+    const d = $('domain').value.trim();
+    if(!d){ $('domainOut').textContent = 'Type a domain first.'; return; }
+    if(!tauri){ $('domainOut').textContent = 'Demo mode — domain checks run inside the app.'; return; }
+    $('domainOut').textContent = 'Checking…';
+    try{
+      const h = JSON.parse(await tauri.invoke('check_domain', { domain: d }));
+      $('domainOut').textContent = h.verdict + '\nA: ' + (h.a.join(', ') || 'none') + ' · MX: ' + (h.mx.join(', ') || 'none') +
+        '\nSPF: ' + (h.spf || 'missing') + '\nDMARC: ' + (h.dmarc || 'missing');
+    }catch(e){ $('domainOut').textContent = 'Failed: ' + e; }
   });
 
   $('copyWorking').addEventListener('click', () => {
-    const lines = lastResults.filter(r => r.alive).map(r => (r.protocol ? r.protocol + '://' : '') + r.proxy);
-    navigator.clipboard.writeText(lines.join('\n'));
+    navigator.clipboard.writeText(allResults.filter(r => r.alive).map(lineText).join('\n'));
+    setStatus('📋 Working proxies copied.');
   });
-  $('dlTxt').addEventListener('click', () => {
-    const lines = lastResults.filter(r => r.alive).map(r => (r.protocol ? r.protocol + '://' : '') + r.proxy);
-    download('working-proxies.txt', lines.join('\n') + '\n');
-  });
-  $('dlJson').addEventListener('click', () => download('nd-results.json', JSON.stringify(lastResults, null, 2)));
+  $('dlTxt').addEventListener('click', () => download('working-proxies.txt', allResults.filter(r => r.alive).map(lineText).join('\n') + '\n'));
+  $('dlRes').addEventListener('click', () => download('residential.txt', allResults.filter(r => r.alive && r.ip_type === 'residential').map(lineText).join('\n') + '\n'));
+  $('dlDc').addEventListener('click', () => download('datacenter.txt', allResults.filter(r => r.alive && r.ip_type === 'datacenter').map(lineText).join('\n') + '\n'));
+  $('dlJson').addEventListener('click', () => download('nd-results.json', JSON.stringify(allResults, null, 2)));
+  updateLineCount();
 </script>
 </body>
 </html>

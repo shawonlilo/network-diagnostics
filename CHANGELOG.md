@@ -4,6 +4,25 @@ All notable changes to Network Diagnostics, version by version.
 This project follows [Semantic Versioning](https://semver.org) and a
 "born beta" workflow: early public versions, honest changelogs.
 
+## [0.3.0] — 2026-11-02 — The GUI grows up 👑
+
+- **New dashboard GUI.** The first screen is now built around one hero
+  action — **⚡ GET FREE PROXIES** — which fetches the 18 built-in
+  sources and (with auto-check on) immediately starts checking.
+  Live stats (fetched / checked / working / elite / residential /
+  fastest), a real progress bar, filter chips, anonymity and
+  residential/datacenter badges, speed bars, and one-click exports
+  (working / residential / datacenter / full JSON).
+- **Batched checking with progress.** Lists are checked in chunks of
+  200 with results streaming into the table and a Stop button, instead
+  of one silent wait. Fetched lists are capped at 6,000 for a check
+  run so a session stays practical.
+- **Windows fetch fallback.** If `curl.exe` is missing, source
+  fetching falls back to PowerShell's Invoke-WebRequest.
+- CLI release assets are now named per platform
+  (`nd-check-linux-x64`, `nd-check-macos-arm64`,
+  `nd-check-windows-x64.exe`) — no more shared-name overwrite.
+
 ## [0.2.3] — 2026-11-02 — The actual root cause
 
 - The workflow was missing its top-level `permissions: contents: write`
