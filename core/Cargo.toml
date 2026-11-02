@@ -1,10 +1,15 @@
 [package]
 name = "nd-core"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 license = "MIT"
-description = "Network Diagnostics core engine: proxy checking (HTTP/SOCKS4/SOCKS5), anonymity grading, target-site tests, and domain health (DNS/MX/SPF/DMARC). Pure std, no dependencies."
+description = "Network Diagnostics core engine: proxy checking (HTTP/SOCKS4/SOCKS5), anonymity grading, target-site tests, and domain health (DNS/MX/SPF/DMARC). Checking is pure std; source fetching uses ureq + rustls so it works on Android too."
 
 [lib]
 name = "nd_core"
 path = "src/lib.rs"
+
+[dependencies]
+# Pure-Rust HTTPS client (rustls + webpki roots): no system tools, no
+# OpenSSL — this is what makes source fetching work on Android.
+ureq = "2"

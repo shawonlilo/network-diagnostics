@@ -1361,42 +1361,68 @@ pub fn default_sources() -> Vec<SourceDef> {
     ]
 }
 
-/// Fetch a URL as text. The lists live behind HTTPS CDNs, and nd-core is
-/// deliberately dependency-free (no TLS stack), so fetching shells out to
-/// the system `curl` — present on Windows 10+, macOS and virtually all
-/// Linux. Checking itself never uses curl; it speaks raw proxy protocols.
+/// Fetch a URL as text. The lists live behind HTTPS CDNs, so fetching
+/// uses ureq + rustls — pure-Rust HTTPS that runs identically on
+/// desktop and Android. (v0.1–0.3.1 shelled out to the system `curl`,
+/// which Android does not have — the Fetch button could never work
+/// there. Checking itself speaks raw proxy protocols, no HTTP client.)
 pub fn fetch_url(url: &str, timeout: Duration) -> Result<String, String> {
+    match fetch_url_ureq(url, timeout) {
+        Ok(body) => Ok(body),
+        Err(ureq_err) => match fetch_url_curl(url, timeout) {
+            Ok(body) => Ok(body),
+            Err(curl_err) => Err(format!("fetch failed: {ureq_err} | curl: {curl_err}")),
+        },
+    }
+}
+
+/// Primary fetch: in-process HTTPS (ureq + rustls, webpki roots).
+fn fetch_url_ureq(url: &str, timeout: Duration) -> Result<String, String> {
+    let mut builder = ureq::AgentBuilder::new().timeout(timeout.max(Duration::from_secs(5)));
+    // Honour the standard proxy environment variables (curl parity) so
+    // fetching also works behind corporate/egress proxies. Absent on
+    // Android and home machines — there the connection is direct.
+    for var in ["HTTPS_PROXY", "https_proxy", "ALL_PROXY", "all_proxy", "HTTP_PROXY", "http_proxy"] {
+        if let Ok(p) = std::env::var(var) {
+            if !p.trim().is_empty() {
+                if let Ok(proxy) = ureq::Proxy::new(p.trim()) {
+                    builder = builder.proxy(proxy);
+                }
+                break;
+            }
+        }
+    }
+    let agent = builder.build();
+    let resp = agent
+        .get(url)
+        .set(
+            "User-Agent",
+            "nd-check/0.3 (+https://github.com/shawonlilo/network-diagnostics)",
+        )
+        .call()
+        .map_err(|e| format!("fetch failed: {e}"))?;
+    resp.into_string()
+        .map_err(|e| format!("fetch failed: {e}"))
+}
+
+/// Fallback fetch via the system `curl` (desktop only — Android has no
+/// curl, but Android never needs this path: no TLS-intercepting proxy
+/// stands between a phone and the internet). This covers desktops
+/// behind TLS-intercepting corporate/egress proxies whose CA lives in
+/// the OS trust store, which curl uses and webpki roots do not.
+fn fetch_url_curl(url: &str, timeout: Duration) -> Result<String, String> {
     let secs = timeout.as_secs().max(5).to_string();
-    let output = match std::process::Command::new("curl")
+    let output = std::process::Command::new("curl")
         .args([
             "-fsSL",
             "--max-time",
             &secs,
             "-A",
-            "nd-check/0.2 (+https://github.com/)",
+            "nd-check/0.3 (+https://github.com/shawonlilo/network-diagnostics)",
             url,
         ])
         .output()
-    {
-        Ok(o) => o,
-        Err(curl_err) => {
-            // Windows machines without curl.exe on PATH: fall back to
-            // PowerShell's Invoke-WebRequest (present on every Windows 10+).
-            let script = format!(
-                "$ProgressPreference='SilentlyContinue';(Invoke-WebRequest -UseBasicParsing -Uri '{}' -TimeoutSec {}).Content",
-                url.replace('\'', "''"),
-                secs
-            );
-            let ps = std::process::Command::new("powershell")
-                .args(["-NoProfile", "-NonInteractive", "-Command", &script])
-                .output()
-                .map_err(|_| format!("curl unavailable: {curl_err}"))?;
-            if !ps.status.success() {
-                return Err("fetch failed (powershell fallback)".to_string());
-            }
-            return Ok(String::from_utf8_lossy(&ps.stdout).to_string());
-        }
-    };
+        .map_err(|e| format!("curl unavailable: {e}"))?;
     if !output.status.success() {
         return Err(format!(
             "fetch failed ({})",

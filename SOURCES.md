@@ -14,8 +14,10 @@ Rules the catalog follows:
 - Every source is **credited here and in [THANKS.md](THANKS.md)**, with
   its license noted where the project states one. Data fetched at runtime
   remains under its source's terms — we redistribute nothing.
-- Files are fetched over HTTPS via the system `curl`. Checking itself
-  speaks the raw proxy protocols and never touches these sites.
+- Files are fetched over HTTPS in-process (ureq + rustls — works on
+  Android too; earlier versions shelled out to the system `curl`).
+  Checking itself speaks the raw proxy protocols and never touches
+  these sites.
 - Safety: a free proxy is an open relay run by a stranger. Never send
   passwords, cookies, or anything sensitive through one.
 

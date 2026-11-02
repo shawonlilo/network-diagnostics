@@ -1,6 +1,6 @@
 [package]
 name = "network-diagnostics"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 license = "MIT"
 description = "Network Diagnostics — native proxy checker + domain health (Tauri shell over nd-core)."
@@ -25,6 +25,7 @@ nd-core = { path = "../../core" }
 [profile.release]
 opt-level = 3
 lto = true
+strip = true
 
 # The app is its own workspace root: without this, cargo sees the parent
 # workspace at the repository root and refuses to build

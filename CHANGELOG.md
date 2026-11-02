@@ -4,6 +4,24 @@ All notable changes to Network Diagnostics, version by version.
 This project follows [Semantic Versioning](https://semver.org) and a
 "born beta" workflow: early public versions, honest changelogs.
 
+## [0.3.2] — 2026-11-02 — Android actually works now 📱
+
+- **The Fetch button was dead on Android — fixed at the root.**
+  Source fetching shelled out to the system `curl`, which Android
+  does not have (the Windows PowerShell fallback was equally absent).
+  Fetching is now **in-process HTTPS (ureq + rustls)** — identical on
+  every platform, no system tools. Verified end-to-end: 52/52 source
+  files, ~69,800 unique proxies. `curl` remains only as a desktop
+  fallback for TLS-intercepting corporate proxies, and the standard
+  `HTTPS_PROXY` env vars are honoured.
+- **Android is now a real release build.** v0.3.1's APK was a debug
+  build — unoptimized and 443 MB. This one is release-profile,
+  stripped, arm64-only (every modern phone), signed in CI for
+  sideloading, and named `network-diagnostics-android.apk`.
+  Expect a fraction of the size and native speed.
+- **Phone UI pass:** 44px tap targets, two-column stats, larger
+  hero button, 16px inputs (no focus auto-zoom).
+
 ## [0.3.1] — 2026-11-02 — Android arrives 🤖
 
 - **Android APK fixed.** Every Android build up to now failed in CI

@@ -144,6 +144,16 @@
   .domain-out{margin-top:10px;font-size:13.5px;color:var(--muted);white-space:pre-wrap;word-break:break-word}
   footer{margin-top:26px;color:var(--faint);font-size:12.5px;text-align:center}
   ::-webkit-scrollbar{width:10px;height:10px} ::-webkit-scrollbar-thumb{background:#223528;border-radius:99px} ::-webkit-scrollbar-track{background:transparent}
+  /* ---------- phones ---------- */
+  @media (max-width:640px){
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .stat .num{font-size:19px}
+    button,.chip{min-height:44px}
+    .hero-btn{font-size:17px;padding:16px 14px;width:100%}
+    table{font-size:12.5px}
+    th,td{padding:8px 7px}
+    input[type=text],textarea{font-size:16px} /* 16px stops iOS/Android auto-zoom on focus */
+  }
 </style>
 </head>
 <body>
