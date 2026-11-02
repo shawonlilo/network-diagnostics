@@ -4,6 +4,25 @@ All notable changes to Network Diagnostics, version by version.
 This project follows [Semantic Versioning](https://semver.org) and a
 "born beta" workflow: early public versions, honest changelogs.
 
+## [0.2.2] — 2026-11-02 — Release factory, fixed for real
+
+Root causes found in the actual CI logs (not guessed):
+
+- The Tauri action was never given its release inputs, so it built
+  every installer and then logged "No releaseId or tagName provided,
+  skipping all uploads..." — the inputs are now set, and bundles are
+  also kept as workflow artifacts as a safety net.
+- `bundle.icon` was missing from tauri.conf.json, which killed the
+  Windows build at the MSI/NSIS step ("Couldn't find a .ico icon").
+  The icon set is now declared, and icon.ico is a proper multi-size
+  ICO (16→256 px).
+- The CLI release-attach step looked up the tag by its full git ref
+  and then failed to create the release (403); it now passes the
+  explicit tag name and attaches to the existing release.
+- Android: the setup-android action's sdkmanager call fails on
+  current runner images ("Failed to find package 'tools'"); the job
+  now uses the runner's preinstalled SDK directly.
+
 ## [0.2.1] — 2026-11-02 — Release-assets fix
 
 - Fixed the Tauri app build: the app crate now declares its own
