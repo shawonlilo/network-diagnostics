@@ -4,6 +4,15 @@ All notable changes to Network Diagnostics, version by version.
 This project follows [Semantic Versioning](https://semver.org) and a
 "born beta" workflow: early public versions, honest changelogs.
 
+## [0.2.3] — 2026-11-02 — The actual root cause
+
+- The workflow was missing its top-level `permissions: contents: write`
+  block (lost when the file was first generated). Without it, the
+  Actions token is read-only in this repository, so **every** release
+  create/upload from CI failed with 403 "Resource not accessible by
+  integration" — while artifact uploads (a different mechanism) kept
+  working, which masked the cause through three releases. Fixed.
+
 ## [0.2.2] — 2026-11-02 — Release factory, fixed for real
 
 Root causes found in the actual CI logs (not guessed):

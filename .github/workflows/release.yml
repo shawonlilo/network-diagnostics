@@ -9,6 +9,12 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+# Without this, GITHUB_TOKEN is read-only in this repo and every release
+# create/upload from CI fails with 403 "Resource not accessible by
+# integration" (the v0.2.0–v0.2.2 saga). Artifact uploads are unaffected.
+permissions:
+  contents: write
+
 jobs:
   quality-gates:
     runs-on: ubuntu-22.04
