@@ -40,13 +40,15 @@
   <input type="text" id="target" placeholder="https://example.com" />
 
   <div>
+    <button class="secondary" id="fetch">Fetch fresh list</button>
     <button id="check">Check proxies</button>
     <span id="status"></span>
   </div>
+  <p class="note">Fetch fresh list pulls the built-in catalog of public free proxy lists (18 sources, credited in SOURCES.md) right now, merges them and removes duplicates — expect a few thousand candidates, most of them already dead. Checking is what separates the working few.</p>
 
   <div id="resultsWrap" class="hidden">
     <table>
-      <thead><tr><th>Status</th><th>Proxy</th><th>Type</th><th>Speed</th><th>Anonymity</th><th>Exit IP</th><th>Target</th></tr></thead>
+      <thead><tr><th>Status</th><th>Proxy</th><th>Protocol</th><th>Speed</th><th>Anonymity</th><th>Network</th><th>Exit IP</th><th>Target</th></tr></thead>
       <tbody id="rows"></tbody>
     </table>
     <p class="note"><b>elite</b> = the site cannot tell a proxy is involved · <b>anonymous</b> = it can tell, but cannot see your IP · <b>transparent</b> = it can see your real IP — avoid for private work.</p>
@@ -85,12 +87,28 @@
         '<td>' + (r.protocol || '—') + '</td>' +
         '<td>' + (r.latency_ms != null ? r.latency_ms + ' ms' : '—') + '</td>' +
         '<td>' + (r.anonymity || '—') + '</td>' +
+        '<td>' + (r.ip_type || '—') + '</td>' +
         '<td class="mono">' + (r.exit_ip || '—') + '</td>' +
         '<td>' + (r.target_ok == null ? '—' : (r.target_ok ? 'passes' : 'blocked')) + '</td>';
       tb.appendChild(tr);
     }
     $('resultsWrap').classList.remove('hidden');
   }
+
+  $('fetch').addEventListener('click', async () => {
+    if(!tauri){ $('status').textContent = 'Demo mode — fetching works inside the app.'; return; }
+    $('fetch').disabled = true;
+    $('status').textContent = 'Fetching sources…';
+    try{
+      const data = JSON.parse(await tauri.invoke('fetch_sources'));
+      $('list').value = data.candidates;
+      const failed = data.reports.filter(r => r.error).length;
+      $('status').textContent = 'Fetched ' + data.total.toLocaleString() + ' unique proxies' + (failed ? ' (' + failed + ' files failed)' : '') + '. Now press Check proxies.';
+    }catch(e){
+      $('status').textContent = 'Fetch failed: ' + e;
+    }
+    $('fetch').disabled = false;
+  });
 
   $('check').addEventListener('click', async () => {
     const text = $('list').value.trim();

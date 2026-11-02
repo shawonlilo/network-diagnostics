@@ -94,17 +94,16 @@ pub fn parse_proxy_line(line: &str) -> Option<ProxyEndpoint> {
         }
     }
     let parts: Vec<&str> = hostport.split(':').collect();
-    let (host, port) = match parts.len() {
-        2 => (parts[0], parts[1].parse::<u16>().ok()?),
-        4 => {
-            if username.is_none() {
-                username = Some(parts[2].to_string());
-                password = Some(parts[3].to_string());
-            }
-            (parts[0], parts[1].parse::<u16>().ok()?)
-        }
-        _ => return None,
-    };
+    if parts.len() < 2 {
+        return None;
+    }
+    // Exactly 4 parts = host:port:user:pass. Any other trailing fields
+    // (some lists append :Country or similar metadata) are ignored.
+    let (host, port) = (parts[0], parts[1].parse::<u16>().ok()?);
+    if parts.len() == 4 && username.is_none() {
+        username = Some(parts[2].to_string());
+        password = Some(parts[3].to_string());
+    }
     if host.is_empty() || port == 0 {
         return None;
     }
@@ -120,6 +119,7 @@ pub fn parse_proxy_line(line: &str) -> Option<ProxyEndpoint> {
 /// Parse a whole list, de-duplicated by host:port:protocol:user.
 pub fn parse_proxy_list(text: &str) -> Vec<ProxyEndpoint> {
     let mut out: Vec<ProxyEndpoint> = Vec::new();
+    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
     for line in text.lines() {
         if let Some(ep) = parse_proxy_line(line) {
             let key = format!(
@@ -128,14 +128,7 @@ pub fn parse_proxy_list(text: &str) -> Vec<ProxyEndpoint> {
                 ep.protocol,
                 ep.username.clone().unwrap_or_default()
             );
-            if !out.iter().any(|e: &ProxyEndpoint| {
-                format!(
-                    "{}|{:?}|{}",
-                    e.authority(),
-                    e.protocol,
-                    e.username.clone().unwrap_or_default()
-                ) == key
-            }) {
+            if seen.insert(key) {
                 out.push(ep);
             }
         }
@@ -1135,5 +1128,369 @@ mod tests {
         let mut trans = base.clone();
         trans.x_forwarded_for = Some("1.1.1.1".to_string());
         assert_eq!(grade_anonymity(&trans, Some("1.1.1.1")), "transparent");
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Proxy sources — public free lists, fetched at runtime from the user's own
+// machine. This project ships a catalog of URLs only; it never bundles or
+// redistributes proxy data. Every source is credited in SOURCES.md.
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone)]
+pub struct SourceDef {
+    pub name: &'static str,
+    pub homepage: &'static str,
+    pub note: &'static str,
+    /// (protocol label, file URL). Label "mixed" = auto-detect per line.
+    pub files: &'static [(&'static str, &'static str)],
+}
+
+#[derive(Debug, Clone)]
+pub struct SourceReport {
+    pub source: String,
+    pub url: String,
+    pub lines: usize,
+    pub parsed: usize,
+    pub error: Option<String>,
+}
+
+impl SourceReport {
+    pub fn to_json(&self) -> String {
+        format!(
+            "{{\"source\":\"{}\",\"url\":\"{}\",\"lines\":{},\"parsed\":{},\"error\":{}}}",
+            escape_json(&self.source),
+            escape_json(&self.url),
+            self.lines,
+            self.parsed,
+            jstr(&self.error),
+        )
+    }
+}
+
+/// The built-in catalog. Every URL below was verified live (HTTP 200)
+/// on 2026-11-02. Sources publish these files for free programmatic use.
+pub fn default_sources() -> Vec<SourceDef> {
+    vec![
+        SourceDef {
+            name: "TheSpeedX/PROXY-List",
+            homepage: "https://github.com/TheSpeedX/PROXY-List",
+            note: "large raw list, refreshed ~daily (the original checker's source)",
+            files: &[
+                ("http", "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt"),
+                ("socks4", "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks4.txt"),
+                ("socks5", "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks5.txt"),
+            ],
+        },
+        SourceDef {
+            name: "monosans/proxy-list",
+            homepage: "https://github.com/monosans/proxy-list",
+            note: "MIT, re-checked hourly, sorted fastest first",
+            files: &[
+                ("http", "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt"),
+                ("socks4", "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks4.txt"),
+                ("socks5", "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt"),
+            ],
+        },
+        SourceDef {
+            name: "ProxyScrape (free API)",
+            homepage: "https://github.com/proxyscrape/free-proxy-list",
+            note: "official free v4 API, all protocols, refreshed every minute",
+            files: &[(
+                "mixed",
+                "https://api.proxyscrape.com/v4/free-proxy-list/get?request=display_proxies&proxy_format=protocolipport&format=text",
+            )],
+        },
+        SourceDef {
+            name: "stormsia/proxy-list",
+            homepage: "https://github.com/stormsia/proxy-list",
+            note: "republished every 15 min with ASN metadata; known for ISP/residential entries",
+            files: &[(
+                "mixed",
+                "https://raw.githubusercontent.com/stormsia/proxy-list/main/working_proxies.txt",
+            )],
+        },
+        SourceDef {
+            name: "hproxy-com/free-proxy-list",
+            homepage: "https://github.com/hproxy-com/free-proxy-list",
+            note: "aggregates 100+ public sources, re-tested around the clock",
+            files: &[(
+                "mixed",
+                "https://raw.githubusercontent.com/hproxy-com/free-proxy-list/main/all.txt",
+            )],
+        },
+        SourceDef {
+            name: "proxifly/free-proxy-list",
+            homepage: "https://github.com/proxifly/free-proxy-list",
+            note: "validated every 5 minutes, 100+ countries (GPL-3.0 data; fetched at runtime, never bundled)",
+            files: &[
+                ("http", "https://raw.githubusercontent.com/proxifly/free-proxy-list/main/proxies/protocols/http/data.txt"),
+                ("https", "https://raw.githubusercontent.com/proxifly/free-proxy-list/main/proxies/protocols/https/data.txt"),
+                ("socks4", "https://raw.githubusercontent.com/proxifly/free-proxy-list/main/proxies/protocols/socks4/data.txt"),
+                ("socks5", "https://raw.githubusercontent.com/proxifly/free-proxy-list/main/proxies/protocols/socks5/data.txt"),
+            ],
+        },
+        SourceDef {
+            name: "jetkai/proxy-list",
+            homepage: "https://github.com/jetkai/proxy-list",
+            note: "hourly, online-at-test-time entries",
+            files: &[
+                ("http", "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-http.txt"),
+                ("https", "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-https.txt"),
+                ("socks4", "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-socks4.txt"),
+                ("socks5", "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-socks5.txt"),
+            ],
+        },
+        SourceDef {
+            name: "databay-labs/free-proxy-list",
+            homepage: "https://github.com/databay-labs/free-proxy-list",
+            note: "10k+ endpoints, HTTPS-validated, by-country files available",
+            files: &[
+                ("http", "https://raw.githubusercontent.com/databay-labs/free-proxy-list/master/http.txt"),
+                ("https", "https://raw.githubusercontent.com/databay-labs/free-proxy-list/master/https.txt"),
+                ("socks4", "https://raw.githubusercontent.com/databay-labs/free-proxy-list/master/socks4.txt"),
+                ("socks5", "https://raw.githubusercontent.com/databay-labs/free-proxy-list/master/socks5.txt"),
+            ],
+        },
+        SourceDef {
+            name: "iplocate/free-proxy-list",
+            homepage: "https://github.com/iplocate/free-proxy-list",
+            note: "revalidated every 30 min; highest measured live rate in independent tests",
+            files: &[
+                ("http", "https://raw.githubusercontent.com/iplocate/free-proxy-list/main/protocols/http.txt"),
+                ("https", "https://raw.githubusercontent.com/iplocate/free-proxy-list/main/protocols/https.txt"),
+                ("socks4", "https://raw.githubusercontent.com/iplocate/free-proxy-list/main/protocols/socks4.txt"),
+                ("socks5", "https://raw.githubusercontent.com/iplocate/free-proxy-list/main/protocols/socks5.txt"),
+            ],
+        },
+        SourceDef {
+            name: "roosterkid/openproxylist",
+            homepage: "https://github.com/roosterkid/openproxylist",
+            note: "hourly updates",
+            files: &[
+                ("https", "https://raw.githubusercontent.com/roosterkid/openproxylist/main/HTTPS.txt"),
+                ("socks4", "https://raw.githubusercontent.com/roosterkid/openproxylist/main/SOCKS4.txt"),
+                ("socks5", "https://raw.githubusercontent.com/roosterkid/openproxylist/main/SOCKS5.txt"),
+            ],
+        },
+        SourceDef {
+            name: "clarketm/proxy-list",
+            homepage: "https://github.com/clarketm/proxy-list",
+            note: "long-running classic HTTP list",
+            files: &[(
+                "http",
+                "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list.txt",
+            )],
+        },
+        SourceDef {
+            name: "hookzof/socks5_list",
+            homepage: "https://github.com/hookzof/socks5_list",
+            note: "SOCKS5 specialist, auto-updated",
+            files: &[(
+                "socks5",
+                "https://raw.githubusercontent.com/hookzof/socks5_list/master/proxy.txt",
+            )],
+        },
+        SourceDef {
+            name: "proxmint/free-proxy-list",
+            homepage: "https://github.com/proxmint/free-proxy-list",
+            note: "every entry re-tested by a real request every 30 min",
+            files: &[
+                ("http", "https://raw.githubusercontent.com/proxmint/free-proxy-list/main/proxies/http.txt"),
+                ("socks4", "https://raw.githubusercontent.com/proxmint/free-proxy-list/main/proxies/socks4.txt"),
+                ("socks5", "https://raw.githubusercontent.com/proxmint/free-proxy-list/main/proxies/socks5.txt"),
+            ],
+        },
+        SourceDef {
+            name: "relayglass/free-proxy-list",
+            homepage: "https://github.com/relayglass/free-proxy-list",
+            note: "checked every 5 minutes against its own test server",
+            files: &[
+                ("http", "https://raw.githubusercontent.com/relayglass/free-proxy-list/main/protocol/http/http.txt"),
+                ("https", "https://raw.githubusercontent.com/relayglass/free-proxy-list/main/protocol/https/https.txt"),
+                ("socks5", "https://raw.githubusercontent.com/relayglass/free-proxy-list/main/protocol/socks5/socks5.txt"),
+            ],
+        },
+        SourceDef {
+            name: "zloi-user/hideip.me",
+            homepage: "https://github.com/zloi-user/hideip.me",
+            note: "hideip.me lists mirrored to GitHub (added by project owner)",
+            files: &[
+                ("http", "https://raw.githubusercontent.com/zloi-user/hideip.me/main/http.txt"),
+                ("https", "https://raw.githubusercontent.com/zloi-user/hideip.me/main/https.txt"),
+                ("socks4", "https://raw.githubusercontent.com/zloi-user/hideip.me/main/socks4.txt"),
+                ("socks5", "https://raw.githubusercontent.com/zloi-user/hideip.me/main/socks5.txt"),
+            ],
+        },
+        SourceDef {
+            name: "vakhov/fresh-proxy-list",
+            homepage: "https://github.com/vakhov/fresh-proxy-list",
+            note: "fresh list in txt/json/csv (added by project owner)",
+            files: &[
+                ("http", "https://raw.githubusercontent.com/vakhov/fresh-proxy-list/master/http.txt"),
+                ("https", "https://raw.githubusercontent.com/vakhov/fresh-proxy-list/master/https.txt"),
+                ("socks4", "https://raw.githubusercontent.com/vakhov/fresh-proxy-list/master/socks4.txt"),
+                ("socks5", "https://raw.githubusercontent.com/vakhov/fresh-proxy-list/master/socks5.txt"),
+            ],
+        },
+        SourceDef {
+            name: "mmpx12/proxy-list",
+            homepage: "https://github.com/mmpx12/proxy-list",
+            note: "per-protocol files (added by project owner; Tor exit list intentionally not used — Tor exits are not proxies)",
+            files: &[
+                ("http", "https://raw.githubusercontent.com/mmpx12/proxy-list/master/http.txt"),
+                ("https", "https://raw.githubusercontent.com/mmpx12/proxy-list/master/https.txt"),
+                ("socks4", "https://raw.githubusercontent.com/mmpx12/proxy-list/master/socks4.txt"),
+                ("socks5", "https://raw.githubusercontent.com/mmpx12/proxy-list/master/socks5.txt"),
+            ],
+        },
+        // NOTE: gfpcom/free-proxy-list is credited in SOURCES.md but is not
+        // a fetch source — its sources/*.txt files are a registry of
+        // upstream URLs, not proxy data (verified 2026-11-02).
+        SourceDef {
+            name: "Zaeem20/FREE_PROXIES_LIST",
+            homepage: "https://github.com/Zaeem20/FREE_PROXIES_LIST",
+            note: "per-protocol files (added by project owner)",
+            files: &[
+                ("http", "https://raw.githubusercontent.com/Zaeem20/FREE_PROXIES_LIST/master/http.txt"),
+                ("https", "https://raw.githubusercontent.com/Zaeem20/FREE_PROXIES_LIST/master/https.txt"),
+                ("socks4", "https://raw.githubusercontent.com/Zaeem20/FREE_PROXIES_LIST/master/socks4.txt"),
+                ("socks5", "https://raw.githubusercontent.com/Zaeem20/FREE_PROXIES_LIST/master/socks5.txt"),
+            ],
+        },
+    ]
+}
+
+/// Fetch a URL as text. The lists live behind HTTPS CDNs, and nd-core is
+/// deliberately dependency-free (no TLS stack), so fetching shells out to
+/// the system `curl` — present on Windows 10+, macOS and virtually all
+/// Linux. Checking itself never uses curl; it speaks raw proxy protocols.
+pub fn fetch_url(url: &str, timeout: Duration) -> Result<String, String> {
+    let secs = timeout.as_secs().max(5).to_string();
+    let output = std::process::Command::new("curl")
+        .args([
+            "-fsSL",
+            "--max-time",
+            &secs,
+            "-A",
+            "nd-check/0.2 (+https://github.com/)",
+            url,
+        ])
+        .output()
+        .map_err(|e| format!("curl unavailable: {e}"))?;
+    if !output.status.success() {
+        return Err(format!(
+            "fetch failed ({})",
+            output.status.code().unwrap_or(-1)
+        ));
+    }
+    Ok(String::from_utf8_lossy(&output.stdout).to_string())
+}
+
+/// Parse one source file, forcing the file's protocol when lines carry none.
+pub fn merge_source_text(text: &str, protocol_label: &str) -> Vec<ProxyEndpoint> {
+    let forced = match protocol_label {
+        "http" | "https" => Some(ProxyProtocol::Http),
+        "socks5" => Some(ProxyProtocol::Socks5),
+        "socks4" => Some(ProxyProtocol::Socks4),
+        _ => None,
+    };
+    let mut out = Vec::new();
+    for line in text.lines() {
+        if let Some(mut ep) = parse_proxy_line(line) {
+            if ep.protocol.is_none() {
+                ep.protocol = forced.clone();
+            }
+            out.push(ep);
+        }
+    }
+    out
+}
+
+/// Fetch every file of every source, merge and de-duplicate
+/// (the same proxy appears in many lists — dedupe is half the value).
+pub fn fetch_sources(
+    defs: &[SourceDef],
+    timeout: Duration,
+) -> (Vec<ProxyEndpoint>, Vec<SourceReport>) {
+    let mut merged: Vec<ProxyEndpoint> = Vec::new();
+    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut reports = Vec::new();
+    for def in defs {
+        for (label, url) in def.files {
+            let mut report = SourceReport {
+                source: def.name.to_string(),
+                url: url.to_string(),
+                lines: 0,
+                parsed: 0,
+                error: None,
+            };
+            match fetch_url(url, timeout) {
+                Ok(text) => {
+                    report.lines = text.lines().count();
+                    let eps = merge_source_text(&text, label);
+                    report.parsed = eps.len();
+                    for ep in eps {
+                        let key = format!("{}|{:?}", ep.authority(), ep.protocol);
+                        if seen.insert(key) {
+                            merged.push(ep);
+                        }
+                    }
+                }
+                Err(e) => report.error = Some(e),
+            }
+            reports.push(report);
+        }
+    }
+    (merged, reports)
+}
+
+pub fn reports_to_json(reports: &[SourceReport]) -> String {
+    let items: Vec<String> = reports.iter().map(|r| r.to_json()).collect();
+    format!("[\n{}\n]", items.join(",\n"))
+}
+
+/// Render endpoints back to canonical list text (for the app textarea).
+pub fn endpoints_to_text(list: &[ProxyEndpoint]) -> String {
+    list.iter()
+        .map(|ep| match &ep.protocol {
+            Some(p) => format!("{}://{}", p.as_str(), ep.authority()),
+            None => ep.authority(),
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+#[cfg(test)]
+mod source_tests {
+    use super::*;
+
+    #[test]
+    fn catalog_is_populated_and_https() {
+        let defs = default_sources();
+        assert!(defs.len() >= 15, "expected at least 15 sources");
+        for d in &defs {
+            assert!(!d.files.is_empty(), "{} has no files", d.name);
+            for (_, url) in d.files {
+                assert!(url.starts_with("https://"), "{} not https", url);
+            }
+        }
+    }
+
+    #[test]
+    fn merge_forces_protocol_and_skips_garbage() {
+        let text = "1.2.3.4:8080\n# comment\nnonsense line\nsocks5://5.6.7.8:1080\n";
+        let eps = merge_source_text(text, "http");
+        assert_eq!(eps.len(), 2);
+        assert_eq!(eps[0].protocol, Some(ProxyProtocol::Http)); // forced
+        assert_eq!(eps[1].protocol, Some(ProxyProtocol::Socks5)); // kept
+        let mixed = merge_source_text("9.9.9.9:3128\n", "mixed");
+        assert_eq!(mixed[0].protocol, None); // auto-detect later
+    }
+
+    #[test]
+    fn endpoints_render_with_protocol() {
+        let eps = merge_source_text("1.2.3.4:8080\n", "socks4");
+        assert_eq!(endpoints_to_text(&eps), "socks4://1.2.3.4:8080");
     }
 }

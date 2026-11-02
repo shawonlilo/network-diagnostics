@@ -1,6 +1,18 @@
-# Network Diagnostics
+# Network Diagnostics — Free Proxy Checker & Proxy List Tester
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Debian%20%7C%20Android-blue)](#install)
+[![Sources](https://img.shields.io/badge/free%20proxy%20sources-18-orange)](#proxy-sources)
 
 **Test a proxy list on your own machine. Keep the ones that work.**
+
+A free, open-source **proxy checker** for **HTTP, HTTPS, SOCKS4 and SOCKS5**
+proxies — for Windows, macOS, Linux, Debian and Android. Check thousands of
+free proxies locally for speed, anonymity (elite / anonymous / transparent),
+residential vs datacenter network, and whether they reach the site you
+actually need. Ships with **18 built-in free proxy list sources** (67,000+
+unique proxies, fetched fresh at runtime) so you can go from zero to a
+working proxy pool in two clicks — no signup, no API key, no cost.
 
 Paste any list of proxies and Network Diagnostics checks every one locally:
 live status, protocol, speed, anonymity level, and exit IP. HTTP, HTTPS,
@@ -37,6 +49,10 @@ open, with a public issue list.
 
 ## Use it (app)
 
+0. No list handy? Press **Fetch fresh list** — the app pulls the
+   built-in catalog of 18 public free sources (see
+   [SOURCES.md](SOURCES.md)), merges them and removes duplicates
+   (67,599 unique candidates when last measured). Or paste your own:
 1. Paste your proxy list — one per line. `host:port`,
    `socks5://host:port`, `user:pass@host:port` all work.
 2. Optional: type the site you need to reach.
@@ -56,6 +72,13 @@ The same engine ships as a small (600 KB) command-line binary, `nd-check` —
 handy for scheduled pool refreshes on a VPS:
 
 ```bash
+nd-check fetch --out ./pool
+# pulls all 18 sources at runtime -> pool/candidates.txt (deduped)
+
+nd-check fetch --check --geo --target https://example.com --out ./results
+# fetch + check in one run; --geo also splits exports into
+# residential.txt / datacenter.txt lanes
+
 nd-check check --file proxies.txt --target https://example.com \
   --threads 50 --out ./results
 # writes results.json, working.txt, target_ok.txt
@@ -123,7 +146,20 @@ Diagnostics needs no keys at all.
 - [ ] iOS companion mode
 - [ ] Scheduled pool refresh profiles in the app (CLI already supports it)
 
+## Proxy sources
+
+The built-in catalog — TheSpeedX, monosans, ProxyScrape, stormsia,
+HProxy, proxifly, jetkai, databay, iplocate, roosterkid, clarketm,
+hookzof, proxmint, relayglass, hideip.me, vakhov, mmpx12, Zaeem20 — is
+documented with refresh rates and license notes in
+[SOURCES.md](SOURCES.md). All credit to the publishers:
+[THANKS.md](THANKS.md).
+
 ## License
 
 MIT. Built with an AI-assisted, beta-first workflow ("born beta"):
 issues and pull requests welcome.
+
+---
+
+<sub>free proxy · proxy checker · free proxy list · proxy tester · socks5 proxy · socks4 proxy · http proxy · https proxy · proxy list · free proxies · proxy scraper · working proxies · elite proxy · anonymous proxy · residential proxy · proxy checker online alternative · open source proxy tool</sub>

@@ -15,6 +15,7 @@ async fn check_proxies(list_text: String, target: Option<String>) -> Result<Stri
         target_url: target.filter(|t| !t.trim().is_empty()),
         threads: 50,
         timeout: Duration::from_secs(10),
+        geo: true, // app classifies residential vs datacenter by default
         ..Default::default()
     };
     // Baseline for transparent grading: what the judge sees without a proxy.
@@ -30,6 +31,23 @@ async fn check_proxies(list_text: String, target: Option<String>) -> Result<Stri
     Ok(results_to_json(&results))
 }
 
+/// Pull the built-in catalog of public free lists at runtime, merge and
+/// de-duplicate. Returns JSON: {total, candidates (list text), reports}.
+#[tauri::command]
+async fn fetch_sources() -> Result<String, String> {
+    let (merged, reports) = tauri::async_runtime::spawn_blocking(move || {
+        nd_core::fetch_sources(&default_sources(), Duration::from_secs(20))
+    })
+    .await
+    .map_err(|e| e.to_string())?;
+    Ok(format!(
+        "{{\"total\":{},\"candidates\":\"{}\",\"reports\":{}}}",
+        merged.len(),
+        escape_json(&endpoints_to_text(&merged)),
+        reports_to_json(&reports)
+    ))
+}
+
 #[tauri::command]
 async fn check_domain(domain: String) -> Result<String, String> {
     let health = tauri::async_runtime::spawn_blocking(move || {
@@ -42,7 +60,7 @@ async fn check_domain(domain: String) -> Result<String, String> {
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![check_proxies, check_domain])
+        .invoke_handler(tauri::generate_handler![check_proxies, check_domain, fetch_sources])
         .run(tauri::generate_context!())
         .expect("error while running Network Diagnostics");
 }
