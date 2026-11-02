@@ -1,0 +1,48 @@
+// Network Diagnostics — Tauri shell. All checking runs in nd-core on the
+// user's own device; the UI only collects the list and renders results.
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+use nd_core::*;
+use std::time::Duration;
+
+#[tauri::command]
+async fn check_proxies(list_text: String, target: Option<String>) -> Result<String, String> {
+    let list = parse_proxy_list(&list_text);
+    if list.is_empty() {
+        return Err("no valid proxies found in the pasted list".to_string());
+    }
+    let mut opts = CheckOptions {
+        target_url: target.filter(|t| !t.trim().is_empty()),
+        threads: 50,
+        timeout: Duration::from_secs(10),
+        ..Default::default()
+    };
+    // Baseline for transparent grading: what the judge sees without a proxy.
+    if let Ok((200, body)) = direct_fetch(&opts.judge_url, opts.timeout) {
+        if let Some(origin) = parse_judge(&body).origin {
+            opts.real_ip = Some(origin.split(',').next().unwrap_or("").trim().to_string());
+        }
+    }
+    // Checking is blocking network I/O; keep the UI thread free.
+    let results = tauri::async_runtime::spawn_blocking(move || check_all(&list, &opts))
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(results_to_json(&results))
+}
+
+#[tauri::command]
+async fn check_domain(domain: String) -> Result<String, String> {
+    let health = tauri::async_runtime::spawn_blocking(move || {
+        domain_health(&domain, "8.8.8.8:53", Duration::from_secs(5))
+    })
+    .await
+    .map_err(|e| e.to_string())?;
+    Ok(health.to_json())
+}
+
+fn main() {
+    tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![check_proxies, check_domain])
+        .run(tauri::generate_context!())
+        .expect("error while running Network Diagnostics");
+}

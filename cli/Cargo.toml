@@ -1,0 +1,13 @@
+[package]
+name = "nd-check"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Network Diagnostics CLI: batch proxy checker + domain health. Same nd-core engine as the desktop/mobile app."
+
+[[bin]]
+name = "nd-check"
+path = "src/main.rs"
+
+[dependencies]
+nd-core = { path = "../core" }

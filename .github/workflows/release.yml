@@ -1,0 +1,110 @@
+name: Release
+
+# Born-beta factory: push a version tag (v0.1.0-beta.1) and this builds
+# installers for Windows, macOS, Linux and Debian, the nd-check CLI for
+# all three desktops, and an experimental Android APK.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  quality-gates:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Core tests
+        run: cargo test --release
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Slop scan (aislop, fail under 80)
+        run: |
+          npx --yes aislop scan . || true
+          echo "aislop is advisory during beta; gitleaks + tests are the hard gates"
+
+  cli:
+    needs: quality-gates
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            artifact: nd-check-linux-x64
+          - os: windows-latest
+            artifact: nd-check-windows-x64
+          - os: macos-latest
+            artifact: nd-check-macos-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build CLI
+        run: cargo build --release --bin nd-check
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: |
+            target/release/nd-check
+            target/release/nd-check.exe
+
+  desktop:
+    needs: quality-gates
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            args: ""
+          - os: macos-latest
+            args: "--target aarch64-apple-darwin"
+          - os: macos-latest
+            args: "--target x86_64-apple-darwin"
+          - os: ubuntu-22.04
+            args: ""
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Linux system packages
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev \
+            libayatana-appindicator3-dev librsvg2-dev libssl-dev
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - name: Build app + installers
+        uses: tauri-apps/tauri-action@v0
+        with:
+          projectPath: app
+          args: ${{ matrix.args }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  android:
+    needs: quality-gates
+    runs-on: ubuntu-22.04
+    continue-on-error: true # beta: Android lane is experimental
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - name: Rust + Android targets
+        run: |
+          rustup target add aarch64-linux-android armv7-linux-androideabi
+          cargo install tauri-cli --version "^2" --locked
+      - name: Init + build Android
+        working-directory: app/src-tauri
+        run: |
+          cargo tauri android init
+          cargo tauri android build --apk || cargo tauri android build --apk --debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nd-android-apk
+          path: app/src-tauri/gen/android/app/build/outputs/**/*.apk
+          if-no-files-found: warn

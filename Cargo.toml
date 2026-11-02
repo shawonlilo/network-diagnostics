@@ -1,0 +1,10 @@
+[workspace]
+resolver = "2"
+members = ["core", "cli"]
+default-members = ["core", "cli"]
+# The Tauri app in app/ is built by CI (needs platform WebView dev libraries).
+# It consumes the same nd-core library through a path dependency.
+
+[profile.release]
+opt-level = 3
+lto = true

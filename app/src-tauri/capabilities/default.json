@@ -1,0 +1,1 @@
+{"$schema":"../gen/schemas/desktop-schema.json","description":"Default window permissions. The app needs no filesystem, shell or network permissions of its own — all network work happens inside nd-core over raw sockets.","identifier":"default","permissions":["core:default"],"windows":["main"]}

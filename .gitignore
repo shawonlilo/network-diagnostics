@@ -1,0 +1,10 @@
+/target/
+**/target/
+results/
+*.txt
+!README.md
+proxies*.txt
+working*.txt
+target_ok*.txt
+results.json
+.DS_Store
